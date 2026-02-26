@@ -237,7 +237,7 @@ with tab_works:
         dfs_with_orcid = []
         for orcid_id, data in st.session_state.orcid_data.items():
             df_copy = data['df'].copy()
-            df_copy['orcid'] = 'https://orcid.org/' + orcid_id
+            df_copy['orcid'] = orcid_id
             df_copy['name'] = data['person_name']
             dfs_with_orcid.append(df_copy)
         works_df = pd.concat(dfs_with_orcid, ignore_index=True)
@@ -303,7 +303,7 @@ with tab_works:
                                 "visibility": None,
                                 "doi": "DOI",
                                 "url": st.column_config.LinkColumn("Lien", display_text=":material/open_in_new:"),
-                                "orcid": None if len(orcid_list) == 1 else st.column_config.LinkColumn("ORCID", display_text="https://orcid.org/(.*)"),
+                                "orcid": None if len(orcid_list) == 1 else "ORCID",
                                 "name": None if len(orcid_list) == 1 else "Chercheur"
                                 },
                                 column_order=work_display_columns, 
