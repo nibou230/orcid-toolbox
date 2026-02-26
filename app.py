@@ -226,64 +226,91 @@ with tab_works:
         if works_count == 0:
             st.warning(f"Aucun travail trouvé pour {person_name} ({orcid_input}).")
         else:
+            works_df = df.copy()
             col1, col2 = st.columns([4,1],vertical_alignment="bottom")
             with col1:
                 st.header(f"{works_count} travaux trouvés pour {person_name}")
             with col2:
                 st.link_button(f"Voir profil {orcid_input} :material/open_in_new:", raw.get('orcid-identifier', {}).get('uri'))     
-
-            with st.expander(":material/filter_alt: Afficher les filtres"):
-                filtered_df = df
-                
-                # Add an option to filter by type
-                if 'type' in df.columns:
-                    types = sorted(df['type'].dropna().unique().tolist())
-                    if types:
-                        selected_types = st.multiselect(
-                            "Filtrer par type:",
-                            types,
-                            placeholder="Sélectionnez les types de travaux à afficher"
-                            )
-                        if selected_types:
-                            filtered_df = df[df['type'].isin(selected_types)]
-                
-                # Add an option to filter by publication year
-                if 'publication-year' in df.columns:
-                    years = sorted(df['publication-year'].dropna().unique().tolist())
-                    if years:
-                        lowest_year, highest_year = st.select_slider(
-                            "Filtrer par année de publication:",
-                            years,
-                            value=(years[0], years[-1]),
-                            )
-                        if lowest_year and highest_year:
-                            filtered_df = filtered_df[(filtered_df['publication-year'] >= lowest_year) & (filtered_df['publication-year'] <= highest_year)]
-
-            # Show a simple table of works
-            try:
-                st.dataframe(filtered_df,
-                                column_config={
-                                    "put-code": None,
-                                    "modified-date": None,
-                                    "modified-by": None,
-                                    "title": "Titre",
-                                    "type": "Type",
-                                    "journal-title": "Titre de revue",
-                                    "publication-year": "Année",
-                                    "external-ids": None,
-                                    "visibility": None,
-                                    "doi": "DOI",
-                                    "url": st.column_config.LinkColumn("Lien", display_text=":material/open_in_new:"),
-                                    "orcid": None,
-                                    "name": None
-                                    },
-                                    column_order=["title", "journal-title", "publication-year", "type", "doi", "url"], 
-                                height="content", 
-                                hide_index=True)
-            except Exception:
-                st.write("Aucun travail disponible à afficher.")
     else:
-        st.warning("Cet affichage ne peut être utilisé qu'avec un seul ORCID à la fois. Utilisez l'onglet 'Résumé' pour voir les données agrégées.")
+        # Combine works from multiple profiles with ORCID and name columns
+        dfs_with_orcid = []
+        for orcid_id, data in st.session_state.orcid_data.items():
+            df_copy = data['df'].copy()
+            df_copy['orcid'] = 'https://orcid.org/' + orcid_id
+            df_copy['name'] = data['person_name']
+            dfs_with_orcid.append(df_copy)
+        works_df = pd.concat(dfs_with_orcid, ignore_index=True)
+        works_count = len(works_df)
+        st.header(f"{works_count} travaux trouvés pour {len(orcid_list)} profils")
+
+    if works_count > 0:
+        with st.expander(":material/filter_alt: Afficher les filtres"):
+            filtered_df = works_df
+            
+            # Add an option to filter by type
+            if 'type' in works_df.columns:
+                types = sorted(works_df['type'].dropna().unique().tolist())
+                if types:
+                    selected_types = st.multiselect(
+                        "Filtrer par type:",
+                        types,
+                        placeholder="Sélectionnez les types de travaux à afficher"
+                        )
+                    if selected_types:
+                        filtered_df = works_df[works_df['type'].isin(selected_types)]
+            
+            # Add an option to filter by publication year
+            if 'publication-year' in works_df.columns:
+                years = sorted(works_df['publication-year'].dropna().unique().tolist())
+                if years:
+                    lowest_year, highest_year = st.select_slider(
+                        "Filtrer par année de publication:",
+                        years,
+                        value=(years[0], years[-1]),
+                        )
+                    if lowest_year and highest_year:
+                        filtered_df = filtered_df[(filtered_df['publication-year'] >= lowest_year) & (filtered_df['publication-year'] <= highest_year)]
+            
+            # Add an option to filter by Author if multiple profiles
+            if len(orcid_list) > 1 and 'name' in works_df.columns:
+                names = sorted(works_df['name'].dropna().unique().tolist())
+                selected_names = st.multiselect(
+                    "Filtrer par chercheur:",
+                    names,
+                    placeholder="Sélectionnez les chercheurs à afficher"
+                    )
+                if selected_names:
+                    filtered_df = filtered_df[filtered_df['name'].isin(selected_names)]
+
+        # Show a simple table of works
+        if len(orcid_list) == 1:
+             work_display_columns = ["title", "journal-title", "publication-year", "type", "doi", "url"]
+        else:
+            work_display_columns = ["name", "title", "journal-title", "publication-year", "type", "doi", "url"]
+
+        try:
+            st.dataframe(filtered_df,
+                            column_config={
+                                "put-code": None,
+                                "modified-date": None,
+                                "modified-by": None,
+                                "title": "Titre",
+                                "type": "Type",
+                                "journal-title": "Titre de revue",
+                                "publication-year": "Année",
+                                "external-ids": None,
+                                "visibility": None,
+                                "doi": "DOI",
+                                "url": st.column_config.LinkColumn("Lien", display_text=":material/open_in_new:"),
+                                "orcid": None if len(orcid_list) == 1 else st.column_config.LinkColumn("ORCID", display_text="https://orcid.org/(.*)"),
+                                "name": None if len(orcid_list) == 1 else "Chercheur"
+                                },
+                                column_order=work_display_columns, 
+                            height="content", 
+                            hide_index=True)
+        except Exception:
+            st.write("Aucun travail disponible à afficher.")
 
 with tab_summary:
 
