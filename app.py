@@ -232,24 +232,33 @@ with tab_works:
             with col2:
                 st.link_button(f"Voir profil {orcid_input} :material/open_in_new:", raw.get('orcid-identifier', {}).get('uri'))     
 
-            # Add an option to filter by type
-            if 'type' in df.columns:
-                types = sorted(df['type'].dropna().unique().tolist())
-                if types:
-                    selected_types = st.multiselect(
-                        "Filtrer par type:",
-                        types,
-                        placeholder="Sélectionnez les types de travaux à afficher"
-                        )
-                    if selected_types:
-                        filtered_df = df[df['type'].isin(selected_types)]
-                    else:
-                        filtered_df = df
-                else:
-                    filtered_df = df
-            else:
+            with st.expander(":material/filter_alt: Afficher les filtres"):
                 filtered_df = df
-            
+                
+                # Add an option to filter by type
+                if 'type' in df.columns:
+                    types = sorted(df['type'].dropna().unique().tolist())
+                    if types:
+                        selected_types = st.multiselect(
+                            "Filtrer par type:",
+                            types,
+                            placeholder="Sélectionnez les types de travaux à afficher"
+                            )
+                        if selected_types:
+                            filtered_df = df[df['type'].isin(selected_types)]
+                
+                # Add an option to filter by publication year
+                if 'publication-year' in df.columns:
+                    years = sorted(df['publication-year'].dropna().unique().tolist())
+                    if years:
+                        lowest_year, highest_year = st.select_slider(
+                            "Filtrer par année de publication:",
+                            years,
+                            value=(years[0], years[-1]),
+                            )
+                        if lowest_year and highest_year:
+                            filtered_df = filtered_df[(filtered_df['publication-year'] >= lowest_year) & (filtered_df['publication-year'] <= highest_year)]
+
             # Show a simple table of works
             try:
                 st.dataframe(filtered_df,

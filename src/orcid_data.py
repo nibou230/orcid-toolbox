@@ -129,8 +129,16 @@ def fetch_orcid_data(orcid: str, timeout: int = 10) -> tuple[pd.DataFrame, Optio
 
 	data = resp.json()
 
-	researcher_givenname = data.get("person", {}).get("name", {}).get("given-names", {}).get("value", "")
-	researcher_familyname = data.get("person", {}).get("name", {}).get("family-name", {}).get("value", "")
+	try:
+		researcher_givenname = data.get("person", {}).get("name", {}).get("given-names", {}).get("value", "") or ""
+	except (AttributeError, TypeError):
+		researcher_givenname = ""
+	
+	try:
+		researcher_familyname = data.get("person", {}).get("name", {}).get("family-name", {}).get("value", "") or ""
+	except (AttributeError, TypeError):
+		researcher_familyname = ""
+	
 	researcher_name = f"{researcher_givenname} {researcher_familyname}".strip()
 
 	groups = data.get("activities-summary", {}).get("works", {}).get("group", {}) if isinstance(data, dict) else []
@@ -146,10 +154,15 @@ def fetch_orcid_data(orcid: str, timeout: int = 10) -> tuple[pd.DataFrame, Optio
 		external_ids = _extract_external_ids(summary)
 		dois = [e["doi"] for e in external_ids if e.get("doi")]
 
+		try:
+			modified_by = summary.get("source", {}).get("source-name", {}).get("value")
+		except (AttributeError, TypeError):
+			modified_by = None
+
 		pub: Dict[str, Any] = {
 			"put-code": summary.get("put-code"),
 			"modified-date": format_timestamp(summary.get("last-modified-date", {}).get("value")) if summary.get("last-modified-date") else None,
-			"modified-by": summary.get("source", {}).get("source-name", {}).get("value"),
+			"modified-by": modified_by,
 			"title": _safe_get_title(summary),
 			"type": summary.get("type"),
 			"journal-title": summary.get("journal-title", {}).get("value") if summary.get("journal-title") else None,
