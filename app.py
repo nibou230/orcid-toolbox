@@ -392,6 +392,9 @@ with tab_summary:
             height="content",
             hide_index=True)
 
+with tab_suggest:
+    st.warning("Cette section n'est pas encore implémentée.")
+
 with tab_compare:
 
     if len(orcid_list) > 1:
@@ -556,5 +559,4 @@ with tab_compare:
                             st.json(ref_ner, expanded=False)
             
 
-with tab_suggest:
-    st.warning("Cette section n'est pas encore implémentée.")
+
