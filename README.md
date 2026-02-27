@@ -4,8 +4,6 @@ A web app built using the [Streamlit](https://streamlit.io/) framework offering 
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://orcid-toolbox.streamlit.app/)
 
-Work in progress. Interface currently in French only.
-
 ## Installation
 
 Install dependencies with
@@ -48,3 +46,9 @@ streamlit run app.py
 The first time trying to match a list of references will take some time as the tokenizers will need to be installed first. It should be faster on later runs.
 
 More details to come.
+
+## Acknowledgements
+
+This project was inspired by [Eric Silberberg](https://github.com/esilberberg)'s [Open Access Dashboard](https://oa-dashboard.streamlit.app/).
+
+This is not a vibe-coded project. GPT-5.3-Codex was used to assist manual development.
