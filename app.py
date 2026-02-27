@@ -292,7 +292,11 @@ with tab_works:
             
             with filter_col2:
                 st.metric("Travaux affichés", len(filtered_df), delta=f"{len(filtered_df) - len(works_df)} filtrés")
-                st.write(f"Sans année de publication: {filtered_df['publication-year'].isna().sum()}")
+                works_without_year = filtered_df['publication-year'].isna().sum()
+                if works_without_year == 1:
+                    st.badge(f"1 travail sans année de publication", icon=":material/warning:", color="orange")
+                elif works_without_year > 1:
+                    st.badge(f"{works_without_year} travaux sans année de publication", icon=":material/warning:", color="orange")
         
         with st.expander(":material/export_notes: Exporter les données"):
             export_files_col, export_overton_col = st.columns(2)
@@ -333,6 +337,7 @@ with tab_works:
             with export_overton_col:
                 if len(overton_key.strip()) > 0:
                     doi_list_for_overton = filtered_df['doi'].dropna().unique().tolist()
+                    works_without_doi = filtered_df['doi'].isna().sum()
                     if len(doi_list_for_overton) > 0:
                         if "overton_url" not in st.session_state:
                             st.session_state.overton_url = None
@@ -354,6 +359,10 @@ with tab_works:
                                     st.error(f"Erreur lors de la génération du set Overton: {str(e)}")
                         else:
                             st.link_button("Lancer la requête dans Overton", st.session_state.overton_url, icon=":material/feature_search:")
+                    if works_without_doi == 1:
+                        st.badge(f"1 travail sans DOI ne sera pas inclus dans la requête Overton", icon=":material/warning:", color="orange")
+                    elif works_without_doi > 1:
+                        st.badge(f"{works_without_doi} travaux sans DOI ne seront pas inclus dans la requête Overton", icon=":material/warning:", color="orange")
                 else:
                     st.warning("Renseignez une clé API pour activer l'export vers Overton.")
 
