@@ -1,8 +1,10 @@
 import streamlit as st
 import re
+from io import BytesIO
 import pandas as pd
 from src.orcid_data import fetch_orcid_data, format_timestamp
 from src.references_matching import extract_and_process_references, prepare_orcid_works, match_references_to_orcid
+from src.overton_data import get_overton_set_url
 import importlib.util
 # TODO: Use gettext for localization
 # The user locale is available at st.context.locale
@@ -38,7 +40,11 @@ if st.query_params and "tab" in st.query_params and st.query_params["tab"] in ["
 else:
     default_tab = "Résumé"
 
-tab_summary, tab_works, tab_compare, tab_suggest = st.tabs(["Résumé", "Travaux", "Comparateur", "Suggestions"], default=default_tab)
+tab_summary, tab_works, tab_compare, tab_suggest, tab_keys = st.tabs(["Résumé", "Travaux", "Comparateur", "Suggestions", "Clés"], default=default_tab)
+
+with tab_keys:
+    overton_key = st.text_input("Clé API Overton")
+
 
 # Check for ORCID from query params first and validate immediately
 if "orcid_list" not in st.session_state:
@@ -290,6 +296,69 @@ with tab_works:
                 st.metric("Travaux affichés", len(filtered_df), delta=f"{len(filtered_df) - len(works_df)} filtrés")
                 st.write(f"Sans année de publication: {filtered_df['publication-year'].isna().sum()}")
         
+        with st.expander(":material/export_notes: Exporter les données"):
+            export_files_col, export_overton_col = st.columns(2)
+
+            with export_files_col:
+
+                csv_col, xls_col = st.columns(2)
+
+                with csv_col:
+                    def make_csv():
+                        return filtered_df.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        label="Télécharger CSV",
+                        data=make_csv,
+                        file_name='liste-travaux.csv',
+                        mime='text/csv',
+                        key="download_csv",
+                        icon=":material/download:"
+                    )
+
+                with xls_col:
+                    def make_excel():
+                         excel_buffer = BytesIO()
+                         with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+                             filtered_df.to_excel(writer, index=False, sheet_name="travaux")
+                         excel_buffer.seek(0)
+                         return excel_buffer.getvalue()
+                
+                    st.download_button(
+                        label="Télécharger Excel",
+                        data=make_excel,
+                        file_name='liste-travaux.xlsx',
+                        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        key="download_excel",
+                        icon=":material/table_view:"
+                    )
+            
+            with export_overton_col:
+                if len(overton_key.strip()) > 0:
+                    doi_list_for_overton = filtered_df['doi'].dropna().unique().tolist()
+                    if len(doi_list_for_overton) > 0:
+                        if "overton_url" not in st.session_state:
+                            st.session_state.overton_url = None
+                        if "overton_last_generated_signature" not in st.session_state:
+                            st.session_state.overton_last_generated_signature = None
+
+                        current_doi_signature = tuple(sorted(doi_list_for_overton))
+                        has_generated_url = bool(st.session_state.overton_url)
+                        doi_list_has_changed = st.session_state.overton_last_generated_signature != current_doi_signature
+                        should_enable_generate = (not has_generated_url) or doi_list_has_changed
+
+                        if should_enable_generate:
+                            if st.button("Générer le set Overton", key="generate_overton_set", disabled=not should_enable_generate, icon=":material/list_alt_add:"):
+                                try:
+                                    st.session_state.overton_url = get_overton_set_url(doi_list_for_overton, overton_key)
+                                    st.session_state.overton_last_generated_signature = current_doi_signature
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Erreur lors de la génération du set Overton: {str(e)}")
+                        else:
+                            st.link_button("Lancer la requête dans Overton", st.session_state.overton_url, icon=":material/feature_search:")
+                else:
+                    st.info("Renseignez une clé API pour activer l'export vers Overton.")
+
         # Show a simple table of works
         if len(orcid_list) == 1:
              work_display_columns = ["title", "journal-title", "publication-year", "type", "doi", "url"]
