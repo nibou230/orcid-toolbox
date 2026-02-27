@@ -249,7 +249,7 @@ with tab_works:
         st.header(f"Travaux combinés de {len(orcid_list)} profils")
 
     if works_count > 0:
-        with st.expander(":material/filter_alt: Afficher les filtres"):
+        with st.expander(":material/filter_alt: Filtrer"):
             filtered_df = works_df
 
             filter_col1, filter_col2 = st.columns([5, 1])
@@ -298,7 +298,7 @@ with tab_works:
                 elif works_without_year > 1:
                     st.badge(f"{works_without_year} travaux sans année de publication", icon=":material/warning:", color="orange")
         
-        with st.expander(":material/export_notes: Exporter les données"):
+        with st.expander(":material/export_notes: Exporter"):
             export_files_col, export_overton_col = st.columns(2)
 
             with export_files_col:
@@ -326,7 +326,7 @@ with tab_works:
                          return excel_buffer.getvalue()
                 
                     st.download_button(
-                        label="Télécharger Excel",
+                        label="Télécharger vers Excel",
                         data=make_excel,
                         file_name='liste-travaux.xlsx',
                         mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -364,7 +364,7 @@ with tab_works:
                     elif works_without_doi > 1:
                         st.badge(f"{works_without_doi} travaux sans DOI ne seront pas inclus dans la requête Overton", icon=":material/warning:", color="orange")
                 else:
-                    st.warning("Renseignez une clé API pour activer l'export vers Overton.")
+                    st.warning("Renseignez une clé API dans l'onglet gauche pour activer l'export vers Overton.")
 
         # Show a simple table of works
         if len(orcid_list) == 1:
