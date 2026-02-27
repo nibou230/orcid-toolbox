@@ -229,7 +229,7 @@ with tab_works:
             works_df = df.copy()
             col1, col2 = st.columns([4,1],vertical_alignment="bottom")
             with col1:
-                st.header(f"{works_count} travaux trouvés pour {person_name}")
+                st.header(f"Travaux de {person_name}")
             with col2:
                 st.link_button(f"Voir profil {orcid_input} :material/open_in_new:", raw.get('orcid-identifier', {}).get('uri'))     
     else:
@@ -242,47 +242,54 @@ with tab_works:
             dfs_with_orcid.append(df_copy)
         works_df = pd.concat(dfs_with_orcid, ignore_index=True)
         works_count = len(works_df)
-        st.header(f"{works_count} travaux trouvés pour {len(orcid_list)} profils")
+        st.header(f"Travaux combinés de {len(orcid_list)} profils")
 
     if works_count > 0:
         with st.expander(":material/filter_alt: Afficher les filtres"):
             filtered_df = works_df
-            
-            # Add an option to filter by type
-            if 'type' in works_df.columns:
-                types = sorted(works_df['type'].dropna().unique().tolist())
-                if types:
-                    selected_types = st.multiselect(
-                        "Filtrer par type:",
-                        types,
-                        placeholder="Sélectionnez les types de travaux à afficher"
-                        )
-                    if selected_types:
-                        filtered_df = works_df[works_df['type'].isin(selected_types)]
-            
-            # Add an option to filter by publication year
-            if 'publication-year' in works_df.columns:
-                years = sorted(works_df['publication-year'].dropna().unique().tolist())
-                if years:
-                    lowest_year, highest_year = st.select_slider(
-                        "Filtrer par année de publication:",
-                        years,
-                        value=(years[0], years[-1]),
-                        )
-                    if lowest_year and highest_year:
-                        filtered_df = filtered_df[(filtered_df['publication-year'] >= lowest_year) & (filtered_df['publication-year'] <= highest_year)]
-            
-            # Add an option to filter by Author if multiple profiles
-            if len(orcid_list) > 1 and 'name' in works_df.columns:
-                names = sorted(works_df['name'].dropna().unique().tolist())
-                selected_names = st.multiselect(
-                    "Filtrer par chercheur:",
-                    names,
-                    placeholder="Sélectionnez les chercheurs à afficher"
-                    )
-                if selected_names:
-                    filtered_df = filtered_df[filtered_df['name'].isin(selected_names)]
 
+            filter_col1, filter_col2 = st.columns([5, 1])
+            
+            with filter_col1:
+                # Add an option to filter by type
+                if 'type' in works_df.columns:
+                    types = sorted(works_df['type'].dropna().unique().tolist())
+                    if types:
+                        selected_types = st.multiselect(
+                            "Filtrer par type:",
+                            types,
+                            placeholder="Sélectionnez les types de travaux à afficher"
+                            )
+                        if selected_types:
+                            filtered_df = works_df[works_df['type'].isin(selected_types)]
+                
+                # Add an option to filter by publication year
+                if 'publication-year' in works_df.columns:
+                    years = sorted(works_df['publication-year'].dropna().unique().tolist())
+                    if years:
+                        lowest_year, highest_year = st.select_slider(
+                            "Filtrer par année de publication:",
+                            years,
+                            value=(years[0], years[-1]),
+                            )
+                        if (lowest_year, highest_year) != (years[0], years[-1]):
+                            filtered_df = filtered_df[(filtered_df['publication-year'] >= lowest_year) & (filtered_df['publication-year'] <= highest_year)]
+                
+                # Add an option to filter by Author if multiple profiles
+                if len(orcid_list) > 1 and 'name' in works_df.columns:
+                    names = sorted(works_df['name'].dropna().unique().tolist())
+                    selected_names = st.multiselect(
+                        "Filtrer par chercheur:",
+                        names,
+                        placeholder="Sélectionnez les chercheurs à afficher"
+                        )
+                    if selected_names:
+                        filtered_df = filtered_df[filtered_df['name'].isin(selected_names)]
+            
+            with filter_col2:
+                st.metric("Travaux affichés", len(filtered_df), delta=f"{len(filtered_df) - len(works_df)} filtrés")
+                st.write(f"Sans année de publication: {filtered_df['publication-year'].isna().sum()}")
+        
         # Show a simple table of works
         if len(orcid_list) == 1:
              work_display_columns = ["title", "journal-title", "publication-year", "type", "doi", "url"]
