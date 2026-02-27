@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-27 16:04-0500\n"
+"POT-Creation-Date: 2026-02-27 16:11-0500\n"
 "PO-Revision-Date: 2026-02-27 14:42-0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -441,12 +441,10 @@ msgid "Entités détectées :"
 msgstr "Detected entities :"
 
 #: app.py:607 app.py:646
-#, fuzzy
 msgid "Score titre"
 msgstr "Title score"
 
 #: app.py:616
-#, fuzzy
 msgid "Références à valider"
 msgstr "References requiring validation"
 
@@ -466,6 +464,6 @@ msgid "DOI: {doi} (score {score})"
 msgstr "DOI: {doi} (score {score})"
 
 #: app.py:654
-#, fuzzy
 msgid "Références non trouvées"
 msgstr "References not found"
+

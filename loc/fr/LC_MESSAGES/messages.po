@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-27 16:04-0500\n"
+"POT-Creation-Date: 2026-02-27 16:11-0500\n"
 "PO-Revision-Date: 2026-02-27 14:59-0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -452,25 +452,3 @@ msgstr ""
 #: app.py:654
 msgid "Références non trouvées"
 msgstr ""
-
-#~ msgid "Boîte à outils ORCID"
-#~ msgstr ""
-
-#~ msgid "Voir profil {orcid_input} :material/open_in_new:"
-#~ msgstr ""
-
-#~ msgid "✅ {count} références trouvées dans ORCID"
-#~ msgstr ""
-
-#~ msgid "Journal: {journal}"
-#~ msgstr ""
-
-#~ msgid "Année: {year}"
-#~ msgstr ""
-
-#~ msgid "DOI: {doi}"
-#~ msgstr ""
-
-#~ msgid "Score titre: {score}"
-#~ msgstr ""
-
