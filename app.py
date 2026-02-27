@@ -6,44 +6,77 @@ from src.orcid_data import fetch_orcid_data, format_timestamp
 from src.references_matching import extract_and_process_references, prepare_orcid_works, match_references_to_orcid
 from src.overton_data import get_overton_set_url
 import importlib.util
-# TODO: Use gettext for localization
-# The user locale is available at st.context.locale
+import gettext
+
+# Set locale from Streamlit context if available, otherwise default to fr
+browser_locale = st.context.locale if hasattr(st.context, "locale") else ""
+if browser_locale.startswith("fr"):
+    default_locale = "fr"
+elif browser_locale.startswith("en"):
+    default_locale = "en"
+else:
+    default_locale = "fr"
+
+if "locale" not in st.session_state:
+    st.session_state.locale = default_locale
+
+# Set up gettext translations
+_ = gettext.translation('messages', localedir='loc', languages=[st.session_state.locale], fallback=True).gettext
 
 def reset_session_state():
     for key in list(st.session_state.keys()):
         st.session_state.pop(key)
 
-st.set_page_config(page_title="Boîte à outils ORCID", page_icon=":toolbox:", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title=_("app-title"), page_icon=":toolbox:", layout="wide", initial_sidebar_state="expanded")
 
 with st.sidebar:
-    st.header(":toolbox: Boîte à outils ORCID")
-    st.markdown('''
-    Cette application réunit plusieurs outils pour interagir avec les données ORCID.
-    ''')
+    
+    st.header(":toolbox: " + _("app-title"))
+
+    # Language chooser
+    lang_map = {
+    "fr": "FR",
+    "en": "EN"
+    }
+
+    selected_locale = st.segmented_control(
+        "lang",
+        options=lang_map.keys(),
+        default=st.session_state.locale,
+        format_func=lambda option: lang_map[option],
+        selection_mode="single",
+        label_visibility="collapsed"
+    )
+
+    if selected_locale and selected_locale != st.session_state.locale:
+        st.session_state.locale = selected_locale
+        st.rerun()
+
+    st.text(_("Cette application réunit plusieurs outils pour interagir avec les données ORCID."))
 
     if "orcid_list" in st.session_state:
-        st.button("Réinitialiser", type="secondary", on_click=reset_session_state)
+        st.button(_("Réinitialiser"), type="secondary", on_click=reset_session_state)
 
-    with st.expander("Clés API", icon=":material/key:"):
-        overton_key = st.text_input("Clé API Overton", help="Une clé est nécessaire pour activer le lien direct vers Overton. Vous trouverez la vôtre dans les paramètres de votre compte Overton.")
+    with st.expander(_("Clés API"), icon=":material/key:"):
+        overton_key = st.text_input(_("Clé API Overton"), help=_("Une clé est nécessaire pour activer le lien direct vers Overton. Vous trouverez la vôtre dans les paramètres de votre compte Overton."))
 
-    st.header("Statut")
+    st.header(_("Statut"))
 
 
 if st.query_params and "tab" in st.query_params and st.query_params["tab"] in ["works", "activites", "resume", "suggestions"]:
     match st.query_params["tab"]:
         case "activites":
-            default_tab = "Autres activités"
+            default_tab = _("Autres activités")
         case "resume":
-            default_tab = "Résumé"
+            default_tab = _("Résumé")
         case "suggestions":
-            default_tab = "Suggestions"
+            default_tab = _("Suggestions")
         case "works":
-            default_tab = "Travaux"
+            default_tab = _("Travaux")
 else:
-    default_tab = "Résumé"
+    default_tab = _("Résumé")
 
-tab_summary, tab_works, tab_compare, tab_suggest = st.tabs(["Résumé", "Travaux", "Comparateur", "Suggestions"], default=default_tab)
+tab_summary, tab_works, tab_compare, tab_suggest = st.tabs([_("Résumé"), _("Travaux"), _("Comparateur"), _("Suggestions")], default=default_tab)
     
 # Check for ORCID from query params first and validate immediately
 if "orcid_list" not in st.session_state:
@@ -60,7 +93,7 @@ if "orcid_list" not in st.session_state:
         invalid_orcids = [orcid for orcid in orcid_list if not re.match(orcid_pattern, orcid)]
         
         if invalid_orcids:
-            st.error(f"Format d'ORCID incorrect pour: {', '.join(invalid_orcids)}. Le format doit être XXXX-XXXX-XXXX-XXXX.")
+            st.error(_("Format d'ORCID incorrect pour: {invalid_orcids}. Le format doit être XXXX-XXXX-XXXX-XXXX.").format(invalid_orcids=', '.join(invalid_orcids)))
             st.stop()
         
         # Store validated ORCID list from URL
@@ -70,10 +103,10 @@ if "orcid_list" not in st.session_state:
         col_input, col_file = st.columns(2)
 
         with col_input:
-            orcid_input = st.text_input("Renseignez un numéro ORCID (ou séparez plusieurs ORCIDs par des virgules):", key="orcid_input_field")
+            orcid_input = st.text_input(_("Renseignez un numéro ORCID (ou séparez plusieurs ORCIDs par des virgules):"), key="orcid_input_field")
 
         with col_file:
-            orcid_file = st.file_uploader("Ou téléversez un fichier (format texte, ORCIDs séparés par des virgules ou un par ligne):", type=["txt"], key="orcid_file_upload")
+            orcid_file = st.file_uploader(_("Ou téléversez un fichier (format texte, ORCIDs séparés par des virgules ou un par ligne):"), type=["txt"], key="orcid_file_upload")
         
         # Process file if uploaded
         orcid_list_from_file = []
@@ -91,7 +124,7 @@ if "orcid_list" not in st.session_state:
                         orcid_list_from_file.append(cleaned)
         
         # Validate on button click OR when input exists (Enter key pressed) OR when file is uploaded
-        if (st.button("Valider", type="primary") or orcid_input or orcid_file) and (orcid_input or orcid_file):
+        if (st.button(_("Valider"), type="primary") or orcid_input or orcid_file) and (orcid_input or orcid_file):
             # Parse and normalize orcid_input to always be a list
             if orcid_input:
                 if isinstance(orcid_input, str):
@@ -111,7 +144,7 @@ if "orcid_list" not in st.session_state:
             orcid_list = [x for x in orcid_list if not (x in seen or seen.add(x))]
             
             if not orcid_list:
-                st.error("Veuillez fournir au moins un ORCID valide.")
+                st.error(_("Veuillez fournir au moins un ORCID valide."))
                 st.stop()
             
             # ORCID validation before storing
@@ -119,7 +152,7 @@ if "orcid_list" not in st.session_state:
             invalid_orcids = [orcid for orcid in orcid_list if not re.match(orcid_pattern, orcid)]
             
             if invalid_orcids:
-                st.error(f"Format d'ORCID incorrect pour: {', '.join(invalid_orcids)}. Le format doit être XXXX-XXXX-XXXX-XXXX.")
+                st.error(_("Format d'ORCID incorrect pour: {invalid_orcids}. Le format doit être XXXX-XXXX-XXXX-XXXX.").format(invalid_orcids=', '.join(invalid_orcids)))
                 st.stop()
             
             # Store in session state once validated
@@ -136,12 +169,12 @@ if 'orcid_data' not in st.session_state:
     st.session_state.orcid_data = {}
 
 # Process each ORCID and store data
-progress_text = "Récupération des données ORCID..."
+progress_text = _("Récupération des données ORCID...")
 multifile_progress = st.progress(0, text=progress_text)
 for idx, orcid_input in enumerate(orcid_list):     
     # Skip if already loaded
     if orcid_input not in st.session_state.orcid_data:
-        with st.spinner(f'Chargement de {orcid_input}...'):
+        with st.spinner(_("Chargement de {orcid_input}...").format(orcid_input=orcid_input)):
             df, raw, orcid_output, person_name = fetch_orcid_data(orcid_input)
             works_count = len(df)
 
@@ -187,9 +220,9 @@ for idx, orcid_input in enumerate(orcid_list):
 # Show status in sidebar
 with st.sidebar:
     if len(orcid_list) == 1:
-        st.success(f"Données ORCID chargées pour {orcid_list[0]}")
+        st.success(_("Données ORCID chargées pour {orcid}.").format(orcid=orcid_list[0]))
     else:
-        st.success(f"Données ORCID chargées pour {len(orcid_list)} profils.")
+        st.success(_("Données ORCID chargées pour {count} profils.").format(count=len(orcid_list)))
 
 multifile_progress.empty()
 # For backward compatibility with single ORCID code
@@ -228,14 +261,14 @@ orcid_summary_df = pd.DataFrame([
 with tab_works:
     if len(orcid_list) == 1:
         if works_count == 0:
-            st.warning(f"Aucun travail trouvé pour {person_name} ({orcid_input}).")
+            st.warning(_("Aucun travail trouvé pour {person_name} ({orcid_input}).").format(person_name=person_name, orcid_input=orcid_input))
         else:
             works_df = df.copy()
             col1, col2 = st.columns([4,1],vertical_alignment="bottom")
             with col1:
-                st.header(f"Travaux de {person_name}")
+                st.header(_("Travaux de {person_name}").format(person_name=person_name))
             with col2:
-                st.link_button(f"Voir profil {orcid_input} :material/open_in_new:", raw.get('orcid-identifier', {}).get('uri'))     
+                st.link_button(_("Voir profil {orcid_input}").format(orcid_input=orcid_input), raw.get('orcid-identifier', {}).get('uri'), icon=":material/open_in_new:")     
     else:
         # Combine works from multiple profiles with ORCID and name columns
         dfs_with_orcid = []
@@ -246,10 +279,10 @@ with tab_works:
             dfs_with_orcid.append(df_copy)
         works_df = pd.concat(dfs_with_orcid, ignore_index=True)
         works_count = len(works_df)
-        st.header(f"Travaux combinés de {len(orcid_list)} profils")
+        st.header(_("Travaux combinés de {count} profils").format(count=len(orcid_list)))
 
     if works_count > 0:
-        with st.expander(":material/filter_alt: Filtrer"):
+        with st.expander(":material/filter_alt: " + _("Filtrer")):
             filtered_df = works_df
 
             filter_col1, filter_col2 = st.columns([5, 1])
@@ -260,9 +293,9 @@ with tab_works:
                     types = sorted(works_df['type'].dropna().unique().tolist())
                     if types:
                         selected_types = st.multiselect(
-                            "Filtrer par type:",
+                            _("Filtrer par type:"),
                             types,
-                            placeholder="Sélectionnez les types de travaux à afficher"
+                            placeholder=_("Sélectionnez les types de travaux à afficher")
                             )
                         if selected_types:
                             filtered_df = works_df[works_df['type'].isin(selected_types)]
@@ -272,7 +305,7 @@ with tab_works:
                     years = sorted(works_df['publication-year'].dropna().unique().tolist())
                     if years:
                         lowest_year, highest_year = st.select_slider(
-                            "Filtrer par année de publication:",
+                            _("Filtrer par année de publication:"),
                             years,
                             value=(years[0], years[-1]),
                             )
@@ -283,22 +316,22 @@ with tab_works:
                 if len(orcid_list) > 1 and 'name' in works_df.columns:
                     names = sorted(works_df['name'].dropna().unique().tolist())
                     selected_names = st.multiselect(
-                        "Filtrer par chercheur:",
+                        _("Filtrer par chercheur:"),
                         names,
-                        placeholder="Sélectionnez les chercheurs à afficher"
+                        placeholder=_("Sélectionnez les chercheurs à afficher")
                         )
                     if selected_names:
                         filtered_df = filtered_df[filtered_df['name'].isin(selected_names)]
             
             with filter_col2:
-                st.metric("Travaux affichés", len(filtered_df), delta=f"{len(filtered_df) - len(works_df)} filtrés")
+                st.metric(_("Travaux affichés"), len(filtered_df), delta=f"{len(filtered_df) - len(works_df)} " + _("filtrés"))
                 works_without_year = filtered_df['publication-year'].isna().sum()
                 if works_without_year == 1:
-                    st.badge(f"1 travail sans année de publication", icon=":material/warning:", color="orange")
+                    st.badge(_("1 travail sans année de publication"), icon=":material/warning:", color="orange")
                 elif works_without_year > 1:
-                    st.badge(f"{works_without_year} travaux sans année de publication", icon=":material/warning:", color="orange")
+                    st.badge(_("{count} travaux sans année de publication").format(count=works_without_year), icon=":material/warning:", color="orange")
         
-        with st.expander(":material/export_notes: Exporter"):
+        with st.expander(":material/export_notes: " + _("Exporter")):
             export_files_col, export_overton_col = st.columns(2)
 
             with export_files_col:
@@ -309,7 +342,7 @@ with tab_works:
                     def make_csv():
                         return filtered_df.to_csv(index=False).encode('utf-8')
                     st.download_button(
-                        label="Télécharger CSV",
+                        label=_("Télécharger CSV"),
                         data=make_csv,
                         file_name='liste-travaux.csv',
                         mime='text/csv',
@@ -326,7 +359,7 @@ with tab_works:
                          return excel_buffer.getvalue()
                 
                     st.download_button(
-                        label="Télécharger vers Excel",
+                        label=_("Télécharger vers Excel"),
                         data=make_excel,
                         file_name='liste-travaux.xlsx',
                         mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -356,15 +389,15 @@ with tab_works:
                                     st.session_state.overton_last_generated_signature = current_doi_signature
                                     st.rerun()
                                 except Exception as e:
-                                    st.error(f"Erreur lors de la génération du set Overton: {str(e)}")
+                                    st.error(_("Erreur lors de la génération du set Overton: {error}").format(error=str(e)))
                         else:
-                            st.link_button("Lancer la requête dans Overton", st.session_state.overton_url, icon=":material/feature_search:")
+                            st.link_button(_("Lancer la requête dans Overton"), st.session_state.overton_url, icon=":material/feature_search:")
                     if works_without_doi == 1:
-                        st.badge(f"1 travail sans DOI ne sera pas inclus dans la requête Overton", icon=":material/warning:", color="orange")
+                        st.badge(_("1 travail sans DOI ne sera pas inclus dans la requête Overton"), icon=":material/warning:", color="orange")
                     elif works_without_doi > 1:
-                        st.badge(f"{works_without_doi} travaux sans DOI ne seront pas inclus dans la requête Overton", icon=":material/warning:", color="orange")
+                        st.badge(_("{count} travaux sans DOI ne seront pas inclus dans la requête Overton").format(count=works_without_doi), icon=":material/warning:", color="orange")
                 else:
-                    st.warning("Renseignez une clé API dans l'onglet gauche pour activer l'export vers Overton.")
+                    st.warning(_("Renseignez une clé API dans l'onglet gauche pour activer l'export vers Overton."))
 
         # Show a simple table of works
         if len(orcid_list) == 1:
@@ -378,22 +411,22 @@ with tab_works:
                                 "put-code": None,
                                 "modified-date": None,
                                 "modified-by": None,
-                                "title": "Titre",
-                                "type": "Type",
-                                "journal-title": "Titre de revue",
-                                "publication-year": "Année",
+                                "title": _("Titre"),
+                                "type": _("Type"),
+                                "journal-title": _("Titre de revue"),
+                                "publication-year": _("Année"),
                                 "external-ids": None,
                                 "visibility": None,
-                                "doi": "DOI",
-                                "url": st.column_config.LinkColumn("Lien", display_text=":material/open_in_new:"),
-                                "orcid": None if len(orcid_list) == 1 else "ORCID",
-                                "name": None if len(orcid_list) == 1 else "Chercheur"
+                                "doi": _("DOI"),
+                                "url": st.column_config.LinkColumn(_("Lien"), display_text=":material/open_in_new:"),
+                                "orcid": None if len(orcid_list) == 1 else _("ORCID"),
+                                "name": None if len(orcid_list) == 1 else _("Chercheur")
                                 },
                                 column_order=work_display_columns, 
                             height="content", 
                             hide_index=True)
         except Exception:
-            st.write("Aucun travail disponible à afficher.")
+            st.write(_("Aucun travail disponible à afficher."))
 
 with tab_summary:
 
@@ -402,19 +435,19 @@ with tab_summary:
         try:
             col1, col2 = st.columns([4,1],vertical_alignment="bottom")
             with col1:
-                st.header(f"Résumé du profil ORCID de {person_name}")
+                st.header(_("Résumé du profil ORCID de {person_name}").format(person_name=person_name))
             with col2:
-                st.link_button(f"Voir profil {orcid_input} :material/open_in_new:", raw.get('orcid-identifier', {}).get('uri'))
+                st.link_button(_("Voir profil {orcid_input}").format(orcid_input=orcid_input), raw.get('orcid-identifier', {}).get('uri'), icon=":material/open_in_new:")
 
-            st.write(f"Créé le: {format_timestamp(raw.get('history', {}).get('submission-date', {}).get('value'))}")
+            st.write(_("Créé le: {creation_date}").format(creation_date=format_timestamp(raw.get('history', {}).get('submission-date', {}).get('value'))))
 
             updated_table = {
                 "Section": [
-                    ":material/person: Informations personnelles",
-                    ":material/work: Emploi",
-                    ":material/school: Formation et qualifications",
-                    ":material/money: Financements",
-                    ":material/docs: Travaux"
+                    ":material/person: " + _("Informations personnelles"),
+                    ":material/work: " + _("Emploi"),
+                    ":material/school: " + _("Formation et qualifications"),
+                    ":material/money: " + _("Financements"),
+                    ":material/docs: " + _("Travaux")
                 ],
                 "Complété": [
                     "✅" if raw.get('person', {}).get('name') else "❌",
@@ -436,38 +469,38 @@ with tab_summary:
             try:
                 if format_timestamp(raw.get('activities-summary', {}).get('works', {}). get('last-modified-date', {}).get('value'),True, True)[1] != "fresh":
                     with tab_suggest:
-                        st.info(f"Votre section Travaux n'a pas été mise à jour depuis le {summary_works['last_modified']}. Pensez à ajouter ou mettre à jour vos publications pour refléter vos travaux récents.")
+                        st.info(_("Votre section Travaux n'a pas été mise à jour depuis le {last_modified}. Pensez à ajouter ou mettre à jour vos publications pour refléter vos travaux récents.").format(last_modified=summary_works['last_modified']))
             except Exception:
                 pass
 
             st.table(updated_table, border="horizontal")
 
-            st.subheader("Distribution des travaux par année de publication")
+            st.subheader(_("Distribution des travaux par année de publication"))
 
             if works_count > 0 and 'publication-year' in df.columns:
                 st.bar_chart(df['publication-year'].value_counts().sort_index())
             else:
-                st.warning("Aucune donnée de publication disponible pour générer le graphique.")
+                st.warning(_("Aucune donnée de publication disponible pour générer le graphique."))
         except Exception as e:
-            st.error(f"Erreur lors de l'affichage du résumé: {str(e)}")
+            st.error(_("Erreur lors de l'affichage du résumé: {error}").format(error=str(e)))
             import traceback
             st.code(traceback.format_exc())
 
     else:
         st.dataframe(orcid_summary_df, column_config={
             "orcid": None,
-            "url": st.column_config.LinkColumn("ORCID", display_text="https://orcid.org/(.*)"),
-            "drilldown": st.column_config.LinkColumn("Ouvrir détails", display_text=":material/open_in_new:"),
-            "person_name": "Nom",
-            "works_count": "Travaux",
-            "works_last_modified": "Màj travaux",
+            "url": st.column_config.LinkColumn(_("ORCID"), display_text="https://orcid.org/(.*)"),
+            "drilldown": st.column_config.LinkColumn(_("Ouvrir détails"), display_text=":material/open_in_new:"),
+            "person_name": _("Nom"),
+            "works_count": _("Travaux"),
+            "works_last_modified": _("Màj travaux"),
             "employments_count": None,
-            "employments_last_modified": "Màj emplois",
+            "employments_last_modified": _("Màj emplois"),
             "educations_count": None,
-            "educations_last_modified": "Màj formations",
+            "educations_last_modified": _("Màj formations"),
             "fundings_count": None,
-            "fundings_last_modified": "Màj financements",
-            "person_last_modified": "Màj profil"
+            "fundings_last_modified": _("Màj financements"),
+            "person_last_modified": _("Màj profil")
             },
             column_order=[
                 "url", "person_name","person_last_modified","works_count","works_last_modified","drilldown","employment_last_modified",
@@ -476,27 +509,27 @@ with tab_summary:
             hide_index=True)
 
 with tab_suggest:
-    st.warning("Cette section n'est pas encore implémentée.")
+    st.warning(_("Cette section n'est pas encore implémentée."))
 
 with tab_compare:
 
     if len(orcid_list) > 1:
-        st.warning("Le comparateur ne peut être utilisé qu'avec un seul ORCID à la fois. Utilisez l'onglet 'Résumé' pour voir les données agrégées.")
+        st.warning(_("Le comparateur ne peut être utilisé qu'avec un seul ORCID à la fois. Utilisez l'onglet 'Résumé' pour voir les données agrégées."))
         st.stop()
 
     if works_count == 0:
-        st.warning(f"Aucun travail trouvé pour {person_name} ({orcid_input}). Le comparateur nécessite des travaux pour fonctionner.")
+        st.warning(_("Aucun travail trouvé pour {person_name} ({orcid_input}). Le comparateur nécessite des travaux pour fonctionner.").format(person_name=person_name, orcid_input=orcid_input))
         st.stop()
     
     if importlib.util.find_spec("transformers") is None and importlib.util.find_spec("references_tractor") is None:
-        st.warning("Cette fonctionalité nécessite la présence d'une bibliothèque pour l'extraction des références, telle que 'transformers' ou 'references_tractor'. Veuillez installer au moins l'une de ces bibliothèques.")
+        st.warning(_("Cette fonctionalité nécessite la présence d'une bibliothèque pour l'extraction des références, telle que 'transformers' ou 'references_tractor'. Veuillez installer au moins l'une de ces bibliothèques."))
         st.stop()
 
     col_file, col_controls = st.columns(2)
 
     with col_file:
 
-        refs_file = st.file_uploader("Téléchargez un fichier texte contenant des références bibliographiques à extraire :", type=["txt"])
+        refs_file = st.file_uploader(_("Téléchargez un fichier texte contenant des références bibliographiques à extraire :"), type=["txt"])
         
         # Initialize variables
         matched_refs = []
@@ -506,11 +539,11 @@ with tab_compare:
             source_refs = refs_file.read().decode("utf-8")
             
             # Create progress bar for reference extraction
-            extraction_progress = st.progress(0, text="Extraction des références en cours...")
+            extraction_progress = st.progress(0, text=_("Extraction des références en cours..."))
             
             def update_progress(current, total):
                 progress_value = current / total if total > 0 else 0
-                extraction_progress.progress(progress_value, text=f"Traitement des références... ({current}/{total})")
+                extraction_progress.progress(progress_value, text=_("Traitement des références... ({current}/{total})").format(current=current, total=total))
             
             # Extract and process references
             screened_refs, invalid_refs = extract_and_process_references(source_refs, progress_callback=update_progress)
@@ -519,16 +552,16 @@ with tab_compare:
             extraction_progress.empty()
 
             with st.sidebar:
-                st.success(f"{len(screened_refs)} références valides extraites, {len(invalid_refs)} références invalides ignorées.")
+                st.success(_("{valid} références valides extraites, {invalid} références invalides ignorées.").format(valid=len(screened_refs), invalid=len(invalid_refs)))
 
     with col_controls:
         
         if refs_file:
             # Compare references with fuzzy matching
-            st.markdown("**Contrôle de correspondance :**")
+            st.markdown(_("**Contrôle de correspondance :**"))
             
             # Configure matching thresholds
-            confidence_interval = st.slider("Seuil de confiance (%)", 50, 100, (60, 90), 1)
+            confidence_interval = st.slider(_("Seuil de confiance (%)"), 50, 100, (60, 90), 1)
             
             # Prepare ORCID works and match references
             orcid_works = prepare_orcid_works(df)
@@ -537,16 +570,16 @@ with tab_compare:
             # Display statistics
             col_a, col_b, col_c = st.columns(3)
             with col_a:
-                st.metric("Références extraites", len(screened_refs))
+                st.metric(_("Références extraites"), len(screened_refs))
             with col_b:
-                st.metric("Trouvées dans ORCID", len(matched_refs))
+                st.metric(_("Trouvées dans ORCID"), len(matched_refs))
             with col_c:
-                st.metric("Manquantes dans ORCID", len(unmatched_refs))
+                st.metric(_("Manquantes dans ORCID"), len(unmatched_refs))
                 
 
     if matched_refs:
-        st.subheader(f"✅ {len(matched_refs)} références trouvées dans ORCID")
-        sorting_option = st.segmented_control("Trier par :", ["Score", "Alpha", "Ordre"], key="sorting_option")
+        st.subheader("✅ " + _("{count} références trouvées dans ORCID").format(count=len(matched_refs)))
+        sorting_option = st.segmented_control(_("Trier par :"), [_("Score"), _("Alpha"), _("Ordre")], key="sorting_option")
         for ref in matched_refs:
             col_source, col_target = st.columns(2)
             with col_source:
@@ -554,7 +587,7 @@ with tab_compare:
                 ref_ner = ref['ref_ner']
                 ref_title_display = ref_ner["TITLE"][0] if "TITLE" in ref_ner and ref_ner["TITLE"] else ref["text"][:50] + "..."
                 with st.expander(f"[{ref_number}] {ref_title_display}"):
-                    st.caption("Texte original:")
+                    st.caption(_("Texte original:"))
                     st.write(ref.get('ref', {}).get('text', ''))
                     col_inner, col_outer = st.columns(2)
                     with col_inner:
