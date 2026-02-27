@@ -24,6 +24,9 @@ with st.sidebar:
     if "orcid_list" in st.session_state:
         st.button("Réinitialiser", type="secondary", on_click=reset_session_state)
 
+    with st.expander("Clés API", icon=":material/key:"):
+        overton_key = st.text_input("Clé API Overton", help="Une clé est nécessaire pour activer le lien direct vers Overton. Vous trouverez la vôtre dans les paramètres de votre compte Overton.")
+
     st.header("Statut")
 
 
@@ -40,12 +43,8 @@ if st.query_params and "tab" in st.query_params and st.query_params["tab"] in ["
 else:
     default_tab = "Résumé"
 
-tab_summary, tab_works, tab_compare, tab_suggest, tab_keys = st.tabs(["Résumé", "Travaux", "Comparateur", "Suggestions", "Clés"], default=default_tab)
-
-with tab_keys:
-    overton_key = st.text_input("Clé API Overton")
-
-
+tab_summary, tab_works, tab_compare, tab_suggest = st.tabs(["Résumé", "Travaux", "Comparateur", "Suggestions"], default=default_tab)
+    
 # Check for ORCID from query params first and validate immediately
 if "orcid_list" not in st.session_state:
     if st.query_params and "orcid" in st.query_params and st.query_params["orcid"]:
@@ -185,13 +184,12 @@ for idx, orcid_input in enumerate(orcid_list):
             }
             multifile_progress.progress((idx + 1) / len(orcid_list), text=progress_text + f" ({idx + 1}/{len(orcid_list)})")
     
-    # Show status in sidebar
-    if st.session_state.orcid_data[orcid_input]['works_count'] > 0:
-        with st.sidebar:
-            st.success(f"Données ORCID OK {orcid_input}")
+# Show status in sidebar
+with st.sidebar:
+    if len(orcid_list) == 1:
+        st.success(f"Données ORCID chargées pour {orcid_list[0]}")
     else:
-        with st.sidebar:
-            st.info(f"Profil ORCID chargé {orcid_input} (0 travaux)")
+        st.success(f"Données ORCID chargées pour {len(orcid_list)} profils.")
 
 multifile_progress.empty()
 # For backward compatibility with single ORCID code
@@ -357,7 +355,7 @@ with tab_works:
                         else:
                             st.link_button("Lancer la requête dans Overton", st.session_state.overton_url, icon=":material/feature_search:")
                 else:
-                    st.info("Renseignez une clé API pour activer l'export vers Overton.")
+                    st.warning("Renseignez une clé API pour activer l'export vers Overton.")
 
         # Show a simple table of works
         if len(orcid_list) == 1:
