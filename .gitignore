@@ -2,4 +2,3 @@
 lib/*
 /.vscode
 test-files
-*.mo
