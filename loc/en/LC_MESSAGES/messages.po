@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-27 16:11-0500\n"
+"POT-Creation-Date: 2026-03-02 12:31-0500\n"
 "PO-Revision-Date: 2026-02-27 14:42-0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -64,7 +64,7 @@ msgstr "Summary"
 msgid "Suggestions"
 msgstr "Suggestions"
 
-#: app.py:75 app.py:79 app.py:450 app.py:495
+#: app.py:75 app.py:79 app.py:453 app.py:498
 msgid "Travaux"
 msgstr "Works"
 
@@ -128,7 +128,7 @@ msgstr "No works found for {person_name} ({orcid_input})"
 msgid "Travaux de {person_name}"
 msgstr "Works for {person_name}"
 
-#: app.py:271 app.py:440
+#: app.py:271 app.py:443
 #, python-brace-format
 msgid "Voir profil {orcid_input}"
 msgstr "Open profile {orcid_input}"
@@ -191,25 +191,37 @@ msgstr "CSV export"
 msgid "Télécharger vers Excel"
 msgstr "Excel export"
 
-#: app.py:392
+#: app.py:376
+#, python-brace-format
+msgid ""
+"Le set Overton est limité à {max_count} DOIs. La sélection actuelle en "
+"contient {current_count}."
+msgstr "Overton sets only support a maximum of {max_count} DOIs. The current selection includes "
+"{current_count} DOIs."
+
+#: app.py:389
+msgid "Générer le set Overton"
+msgstr "Generate Overton set"
+
+#: app.py:395
 #, python-brace-format
 msgid "Erreur lors de la génération du set Overton: {error}"
 msgstr "Error when generating Overton set: {error}"
 
-#: app.py:394
+#: app.py:397
 msgid "Lancer la requête dans Overton"
-msgstr "Launch a query in Overton"
+msgstr "Launch query in Overton"
 
-#: app.py:396
+#: app.py:399
 msgid "1 travail sans DOI ne sera pas inclus dans la requête Overton"
 msgstr "1 work without DOI will not be included in Overton query"
 
-#: app.py:398
+#: app.py:401
 #, python-brace-format
 msgid "{count} travaux sans DOI ne seront pas inclus dans la requête Overton"
 msgstr "{count} works without DOI will not be included in Overton query"
 
-#: app.py:400
+#: app.py:403
 msgid ""
 "Renseignez une clé API dans l'onglet gauche pour activer l'export vers "
 "Overton."
@@ -217,69 +229,69 @@ msgstr ""
 "Input a valid API key in the left sidebar to activate Overton "
 "functionality."
 
-#: app.py:414
+#: app.py:417
 msgid "Titre"
 msgstr "Title"
 
-#: app.py:415
+#: app.py:418
 msgid "Type"
 msgstr "Type"
 
-#: app.py:416
+#: app.py:419
 msgid "Titre de revue"
 msgstr "Journal title"
 
-#: app.py:417 app.py:597 app.py:611 app.py:636 app.py:670
+#: app.py:420 app.py:600 app.py:614 app.py:639 app.py:673
 msgid "Année"
 msgstr "Year"
 
-#: app.py:420 app.py:599 app.py:613 app.py:638 app.py:672
+#: app.py:423 app.py:602 app.py:616 app.py:641 app.py:675
 msgid "DOI"
 msgstr "DOI"
 
-#: app.py:421
+#: app.py:424
 msgid "Lien"
 msgstr "Link"
 
-#: app.py:422 app.py:492
+#: app.py:425 app.py:495
 msgid "ORCID"
 msgstr "ORCID"
 
-#: app.py:423
+#: app.py:426
 msgid "Chercheur"
 msgstr "Author"
 
-#: app.py:429
+#: app.py:432
 msgid "Aucun travail disponible à afficher."
 msgstr "No works to display"
 
-#: app.py:438
+#: app.py:441
 #, python-brace-format
 msgid "Résumé du profil ORCID de {person_name}"
 msgstr "ORCID profile summary for {person_name}"
 
-#: app.py:442
+#: app.py:445
 #, python-brace-format
 msgid "Créé le: {creation_date}"
 msgstr "Created: {creation_date}"
 
-#: app.py:446
+#: app.py:449
 msgid "Informations personnelles"
 msgstr "Personal info"
 
-#: app.py:447
+#: app.py:450
 msgid "Emploi"
 msgstr "Employment"
 
-#: app.py:448
+#: app.py:451
 msgid "Formation et qualifications"
 msgstr "Education and qualifications"
 
-#: app.py:449
+#: app.py:452
 msgid "Financements"
 msgstr "Funding"
 
-#: app.py:472
+#: app.py:475
 #, python-brace-format
 msgid ""
 "Votre section Travaux n'a pas été mise à jour depuis le {last_modified}. "
@@ -290,52 +302,52 @@ msgstr ""
 "{last_modified}. Consider adding or updating your works list to reflect "
 "current activities."
 
-#: app.py:478
+#: app.py:481
 msgid "Distribution des travaux par année de publication"
 msgstr "Distribution of works by publication year"
 
-#: app.py:483
+#: app.py:486
 msgid "Aucune donnée de publication disponible pour générer le graphique."
 msgstr "Not enough publication data to generate graph."
 
-#: app.py:485
+#: app.py:488
 #, python-brace-format
 msgid "Erreur lors de l'affichage du résumé: {error}"
 msgstr "Error when displaying summary: {error}"
 
-#: app.py:493
+#: app.py:496
 msgid "Ouvrir détails"
 msgstr "Open details"
 
-#: app.py:494
+#: app.py:497
 msgid "Nom"
 msgstr "Name"
 
-#: app.py:496
+#: app.py:499
 msgid "Màj travaux"
 msgstr "Works updated"
 
-#: app.py:498
+#: app.py:501
 msgid "Màj emplois"
 msgstr "Employment updated"
 
-#: app.py:500
+#: app.py:503
 msgid "Màj formations"
 msgstr "Education updated"
 
-#: app.py:502
+#: app.py:505
 msgid "Màj financements"
 msgstr "Funding updated"
 
-#: app.py:503
+#: app.py:506
 msgid "Màj profil"
 msgstr "Profile updated"
 
-#: app.py:512
+#: app.py:515
 msgid "Cette section n'est pas encore implémentée."
 msgstr "This section hasn't been implemented yet."
 
-#: app.py:517
+#: app.py:520
 msgid ""
 "Le comparateur ne peut être utilisé qu'avec un seul ORCID à la fois. "
 "Utilisez l'onglet 'Résumé' pour voir les données agrégées."
@@ -343,7 +355,7 @@ msgstr ""
 "This section can only be used on a single ORCID profile. Use the Summary "
 "tab to view aggregated data."
 
-#: app.py:521
+#: app.py:524
 #, python-brace-format
 msgid ""
 "Aucun travail trouvé pour {person_name} ({orcid_input}). Le comparateur "
@@ -352,7 +364,7 @@ msgstr ""
 "No works found for {person_name} ({orcid_input}). This function requires "
 "a list of works."
 
-#: app.py:525
+#: app.py:528
 msgid ""
 "Cette fonctionalité nécessite la présence d'une bibliothèque pour "
 "l'extraction des références, telle que 'transformers' ou "
@@ -363,22 +375,22 @@ msgstr ""
 "'references_tractor' to work. Please ensure at least one is installed "
 "before continuing."
 
-#: app.py:532
+#: app.py:535
 msgid ""
 "Téléchargez un fichier texte contenant des références bibliographiques à "
 "extraire :"
 msgstr "Upload a text file with bibliographic references to be extracted."
 
-#: app.py:542
+#: app.py:545
 msgid "Extraction des références en cours..."
 msgstr "Extracing references..."
 
-#: app.py:546
+#: app.py:549
 #, python-brace-format
 msgid "Traitement des références... ({current}/{total})"
 msgstr "Processing references... ({current}/{total})"
 
-#: app.py:555
+#: app.py:558
 #, python-brace-format
 msgid ""
 "{valid} références valides extraites, {invalid} références invalides "
@@ -387,83 +399,83 @@ msgstr ""
 "{valid} valid references were extracted, {invalid} invalid references "
 "remaining"
 
-#: app.py:561
+#: app.py:564
 msgid "**Contrôle de correspondance :**"
 msgstr "**Matching control :**"
 
-#: app.py:564
+#: app.py:567
 msgid "Seuil de confiance (%)"
 msgstr "Confidence threshold (%)"
 
-#: app.py:573
+#: app.py:576
 msgid "Références extraites"
 msgstr "Extracted references"
 
-#: app.py:575
+#: app.py:578
 msgid "Trouvées dans ORCID"
 msgstr "Found on ORCID profile"
 
-#: app.py:577
+#: app.py:580
 msgid "Manquantes dans ORCID"
 msgstr "Missing from ORCID profile"
 
-#: app.py:581
+#: app.py:584
 #, python-brace-format
 msgid "{count} références trouvées dans ORCID"
 msgstr "{count} references found on ORCID profile"
 
-#: app.py:582
+#: app.py:585
 msgid "Trier par :"
 msgstr "Order by:"
 
-#: app.py:582
+#: app.py:585
 msgid "Score"
 msgstr "Score"
 
-#: app.py:582
+#: app.py:585
 msgid "Alpha"
 msgstr "Alpha"
 
-#: app.py:582
+#: app.py:585
 msgid "Ordre"
 msgstr "Order"
 
-#: app.py:590 app.py:629
+#: app.py:593 app.py:632
 msgid "Texte original:"
 msgstr "Original text"
 
-#: app.py:595 app.py:609 app.py:634 app.py:668
+#: app.py:598 app.py:612 app.py:637 app.py:671
 msgid "Journal"
 msgstr "Journal"
 
-#: app.py:601 app.py:640 app.py:674
+#: app.py:604 app.py:643 app.py:677
 msgid "Entités détectées :"
 msgstr "Detected entities :"
 
-#: app.py:607 app.py:646
+#: app.py:610 app.py:649
 msgid "Score titre"
 msgstr "Title score"
 
-#: app.py:616
+#: app.py:619
 msgid "Références à valider"
 msgstr "References requiring validation"
 
-#: app.py:648
+#: app.py:651
 #, python-brace-format
 msgid "Journal: {journal} (score {score})"
 msgstr "Journal: {journal} (score {score})"
 
-#: app.py:650
+#: app.py:653
 #, python-brace-format
 msgid "Année: {year} (score {score})"
 msgstr "Year: {year} (score {score})"
 
-#: app.py:652
+#: app.py:655
 #, python-brace-format
 msgid "DOI: {doi} (score {score})"
 msgstr "DOI: {doi} (score {score})"
 
-#: app.py:654
+#: app.py:657
 msgid "Références non trouvées"
 msgstr "References not found"
 

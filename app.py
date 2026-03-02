@@ -371,7 +371,10 @@ with tab_works:
                 if len(overton_key.strip()) > 0:
                     doi_list_for_overton = filtered_df['doi'].dropna().unique().tolist()
                     works_without_doi = filtered_df['doi'].isna().sum()
-                    if len(doi_list_for_overton) > 0:
+                    max_doi_count = 25000
+                    if len(doi_list_for_overton) > max_doi_count:
+                        st.error(_("Le set Overton est limité à {max_count} DOIs. La sélection actuelle en contient {current_count}.").format(max_count=max_doi_count, current_count=len(doi_list_for_overton)))
+                    elif len(doi_list_for_overton) > 0:
                         if "overton_url" not in st.session_state:
                             st.session_state.overton_url = None
                         if "overton_last_generated_signature" not in st.session_state:
@@ -383,7 +386,7 @@ with tab_works:
                         should_enable_generate = (not has_generated_url) or doi_list_has_changed
 
                         if should_enable_generate:
-                            if st.button("Générer le set Overton", key="generate_overton_set", disabled=not should_enable_generate, icon=":material/list_alt_add:"):
+                            if st.button(_("Générer le set Overton"), key="generate_overton_set", disabled=not should_enable_generate, icon=":material/list_alt_add:"):
                                 try:
                                     st.session_state.overton_url = get_overton_set_url(doi_list_for_overton, overton_key)
                                     st.session_state.overton_last_generated_signature = current_doi_signature
