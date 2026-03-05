@@ -7,6 +7,8 @@ from src.references_matching import extract_and_process_references, prepare_orci
 from src.overton_data import get_overton_set_url
 import importlib.util
 import gettext
+# TODO: look into using https://docs.python.org/3/library/concurrent.futures.html for parallel
+# data fetching and processing.
 
 # Set locale from Streamlit context if available, otherwise default to fr
 browser_locale = st.context.locale if hasattr(st.context, "locale") else ""
@@ -478,12 +480,6 @@ with tab_summary:
 
             st.table(updated_table, border="horizontal")
 
-            st.subheader(_("Distribution des travaux par année de publication"))
-
-            if works_count > 0 and 'publication-year' in df.columns:
-                st.bar_chart(df['publication-year'].value_counts().sort_index())
-            else:
-                st.warning(_("Aucune donnée de publication disponible pour générer le graphique."))
         except Exception as e:
             st.error(_("Erreur lors de l'affichage du résumé: {error}").format(error=str(e)))
             import traceback
@@ -510,6 +506,20 @@ with tab_summary:
                 "educations_last_modified","fundings_last_modified"],
             height="content",
             hide_index=True)
+        
+    st.subheader(_("Distribution des travaux par année de publication"))
+
+    if works_count > 0 and 'publication-year' in works_df.columns:
+        st.bar_chart(works_df['publication-year'].value_counts().sort_index())
+    else:
+        st.warning(_("Aucune donnée de publication disponible pour générer le graphique."))
+
+    st.subheader(_("Distribution des travaux par type"))
+
+    if works_count > 0 and 'type' in works_df.columns:
+        st.bar_chart(works_df['type'].value_counts(), horizontal=True, sort=False)
+    else:
+        st.warning(_("Aucune donnée de publication disponible pour générer le graphique."))
 
 with tab_suggest:
     st.warning(_("Cette section n'est pas encore implémentée."))
