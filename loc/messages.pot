@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-03-05 15:11-0500\n"
+"POT-Creation-Date: 2026-03-05 15:16-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -267,6 +267,10 @@ msgstr ""
 msgid "Créé le: {creation_date}"
 msgstr ""
 
+#: app.py:450
+msgid "Section"
+msgstr ""
+
 #: app.py:451
 msgid "Informations personnelles"
 msgstr ""
@@ -281,6 +285,14 @@ msgstr ""
 
 #: app.py:454
 msgid "Financements"
+msgstr ""
+
+#: app.py:457
+msgid "Complété"
+msgstr ""
+
+#: app.py:464
+msgid "Dernière modification"
 msgstr ""
 
 #: app.py:477

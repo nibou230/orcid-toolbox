@@ -447,21 +447,21 @@ with tab_summary:
             st.write(_("Créé le: {creation_date}").format(creation_date=format_timestamp(raw.get('history', {}).get('submission-date', {}).get('value'))))
 
             updated_table = {
-                "Section": [
+                _("Section"): [
                     ":material/person: " + _("Informations personnelles"),
                     ":material/work: " + _("Emploi"),
                     ":material/school: " + _("Formation et qualifications"),
                     ":material/money: " + _("Financements"),
                     ":material/docs: " + _("Travaux")
                 ],
-                "Complété": [
+                _("Complété"): [
                     "✅" if raw.get('person', {}).get('name') else "❌",
                     f"✅ ({summary_employments['count']})" if summary_employments else "❌",
                     f"✅ ({summary_educations['count']})" if summary_educations else "❌",
                     f"✅ ({summary_fundings['count']})" if summary_fundings else "❌",
                     f"✅ ({summary_works['count']})" if summary_works else "❌"
                 ],
-                "Dernière modification": [
+                _("Dernière modification"): [
                     format_timestamp(updated_person) if updated_person else "N/A",
                     summary_employments['last_modified'] if summary_employments else "N/A",
                     summary_educations['last_modified'] if summary_educations else "N/A",

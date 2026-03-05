@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-03-05 15:11-0500\n"
+"POT-Creation-Date: 2026-03-05 15:16-0500\n"
 "PO-Revision-Date: 2026-02-27 14:42-0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -276,6 +276,10 @@ msgstr "ORCID profile summary for {person_name}"
 msgid "Créé le: {creation_date}"
 msgstr "Created: {creation_date}"
 
+#: app.py:450
+msgid "Section"
+msgstr "Section"
+
 #: app.py:451
 msgid "Informations personnelles"
 msgstr "Personal info"
@@ -291,6 +295,14 @@ msgstr "Education and qualifications"
 #: app.py:454
 msgid "Financements"
 msgstr "Funding"
+
+#: app.py:457
+msgid "Complété"
+msgstr "Completed"
+
+#: app.py:464
+msgid "Dernière modification"
+msgstr "Last modified"
 
 #: app.py:477
 #, python-brace-format
