@@ -14,9 +14,9 @@ import gettext
 default_locale = "fr"
 if hasattr(st.context, "locale"):
     browser_locale = st.context.locale
-    if browser_locale.startswith("fr"):
+    if isinstance(browser_locale, str) and browser_locale.startswith("fr"):
         default_locale = "fr"
-    elif browser_locale.startswith("en"):
+    elif isinstance(browser_locale, str) and browser_locale.startswith("en"):
         default_locale = "en"
 
 if "locale" not in st.session_state:
