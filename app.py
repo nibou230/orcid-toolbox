@@ -11,13 +11,13 @@ import gettext
 # data fetching and processing.
 
 # Set locale from Streamlit context if available, otherwise default to fr
-browser_locale = st.context.locale if hasattr(st.context, "locale") else ""
-if browser_locale.startswith("fr"):
-    default_locale = "fr"
-elif browser_locale.startswith("en"):
-    default_locale = "en"
-else:
-    default_locale = "fr"
+default_locale = "fr"
+if hasattr(st.context, "locale"):
+    browser_locale = st.context.locale
+    if browser_locale.startswith("fr"):
+        default_locale = "fr"
+    elif browser_locale.startswith("en"):
+        default_locale = "en"
 
 if "locale" not in st.session_state:
     st.session_state.locale = default_locale
