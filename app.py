@@ -182,7 +182,8 @@ for idx, orcid_input in enumerate(orcid_list):
 
             summary_works = {
                 "count": works_count,
-                "last_modified": format_timestamp(raw.get('activities-summary', {}).get('works', {}). get('last-modified-date', {}).get('value'),True)
+                "last_modified": format_timestamp(raw.get('activities-summary', {}).get('works', {}). get('last-modified-date', {}).get('value'),False),
+                "last_modified_display": format_timestamp(raw.get('activities-summary', {}).get('works', {}). get('last-modified-date', {}).get('value'),True),
                 } if raw.get('activities-summary', {}).get('works', {}).get('last-modified-date') else None
         
             summary_employments = {
@@ -197,7 +198,8 @@ for idx, orcid_input in enumerate(orcid_list):
             
             summary_fundings = {
                 "count": raw.get('activities-summary', {}).get('fundings').get('affiliation-group', []).__len__(),
-                "last_modified": format_timestamp(raw.get('activities-summary', {}).get('fundings', {}). get('last-modified-date', {}).get('value'),True)
+                "last_modified": format_timestamp(raw.get('activities-summary', {}).get('fundings', {}). get('last-modified-date', {}).get('value'),False),
+                "last_modified_display": format_timestamp(raw.get('activities-summary', {}).get('fundings', {}). get('last-modified-date', {}).get('value'),True)
                 } if raw.get('activities-summary', {}).get('fundings', {}).get('last-modified-date') else None
             
             try:
@@ -246,15 +248,17 @@ orcid_summary_df = pd.DataFrame([
         'orcid': orcid_id,
         'url': 'https://orcid.org/' + orcid_id,
         'person_name': data['person_name'],
+        'person_last_modified': format_timestamp(data['updated_person']) if data['updated_person'] else None,
         'works_count': data['works_count'],
         'works_last_modified': data['summary_works']['last_modified'] if data['summary_works'] else None,
+        'works_last_modified_display': data['summary_works']['last_modified_display'] if data['summary_works'] else None,
         'employments_count': data['summary_employments']['count'] if data['summary_employments'] else 0,
         'employments_last_modified': data['summary_employments']['last_modified'] if data['summary_employments'] else None,
         'educations_count': data['summary_educations']['count'] if data['summary_educations'] else 0,
         'educations_last_modified': data['summary_educations']['last_modified'] if data['summary_educations'] else None,
         'fundings_count': data['summary_fundings']['count'] if data['summary_fundings'] else 0,
         'fundings_last_modified': data['summary_fundings']['last_modified'] if data['summary_fundings'] else None,
-        'person_last_modified': format_timestamp(data['updated_person']) if data['updated_person'] else None,
+        'fundings_last_modified_display': data['summary_fundings']['last_modified_display'] if data['summary_fundings'] else None,
         'drilldown' : '?tab=works&orcid=' + orcid_id
     }
     for orcid_id, data in st.session_state.orcid_data.items()
@@ -346,7 +350,7 @@ with tab_works:
                     st.download_button(
                         label=_("Télécharger CSV"),
                         data=make_csv,
-                        file_name='liste-travaux.csv',
+                        file_name=_("liste-travaux") + '.csv',
                         mime='text/csv',
                         key="download_csv",
                         icon=":material/download:"
@@ -363,7 +367,7 @@ with tab_works:
                     st.download_button(
                         label=_("Télécharger vers Excel"),
                         data=make_excel,
-                        file_name='liste-travaux.xlsx',
+                        file_name=_("liste-travaux") + '.xlsx',
                         mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                         key="download_excel",
                         icon=":material/table_view:"
@@ -465,8 +469,8 @@ with tab_summary:
                     format_timestamp(updated_person) if updated_person else "N/A",
                     summary_employments['last_modified'] if summary_employments else "N/A",
                     summary_educations['last_modified'] if summary_educations else "N/A",
-                    summary_fundings['last_modified'] if summary_fundings else "N/A",
-                    summary_works['last_modified'] if summary_works else "N/A"
+                    summary_fundings['last_modified_display'] if summary_fundings else "N/A",
+                    summary_works['last_modified_display'] if summary_works else "N/A"
                 ]
             }
 
@@ -486,24 +490,79 @@ with tab_summary:
             st.code(traceback.format_exc())
 
     else:
+
+        with st.expander(":material/export_notes: " + _("Exporter")):
+            csv_col, xls_col = st.columns(2)
+
+            def prepare_summary_for_export(df):
+                df_copy = df.drop(columns=['drilldown','url','works_last_modified_display','fundings_last_modified_display'], inplace=False)
+                df_copy.rename(columns={
+                    'orcid': _("ORCID"),
+                    'person_name': _("Nom"),
+                    'person_last_modified': _("Màj profil"),
+                    'works_count': _("Travaux"),
+                    'works_last_modified': _("Màj travaux"),
+                    'employments_count': _("Emplois"),
+                    'employments_last_modified': _("Màj emplois"),
+                    'educations_count': _("Formations"),
+                    'educations_last_modified': _("Màj formations"),
+                    'fundings_count': _("Financements"),
+                    'fundings_last_modified': _("Màj financements")
+                }, inplace=True)
+                return df_copy
+
+            with csv_col:
+                def make_csv():
+                    orcid_summary_df_copy = prepare_summary_for_export(orcid_summary_df)
+                    return orcid_summary_df_copy.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label=_("Télécharger CSV"),
+                    data=make_csv,
+                    file_name=_("resume-orcid") + '.csv',
+                    mime='text/csv',
+                    key="summary_download_csv",
+                    icon=":material/download:"
+                )
+
+            with xls_col:
+                def make_excel():
+                        excel_buffer = BytesIO()
+                        orcid_summary_df_copy = prepare_summary_for_export(orcid_summary_df)
+                        with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+                            orcid_summary_df_copy.to_excel(writer, index=False, sheet_name="travaux")
+                        excel_buffer.seek(0)
+                        return excel_buffer.getvalue()
+            
+                st.download_button(
+                    label=_("Télécharger vers Excel"),
+                    data=make_excel,
+                    file_name=_("resume-orcid") + '.xlsx',
+                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    key="summary_download_excel",
+                    icon=":material/table_view:"
+                )
+
+
         st.dataframe(orcid_summary_df, column_config={
             "orcid": None,
             "url": st.column_config.LinkColumn(_("ORCID"), display_text="https://orcid.org/(.*)"),
             "drilldown": st.column_config.LinkColumn(_("Ouvrir détails"), display_text=":material/open_in_new:"),
             "person_name": _("Nom"),
             "works_count": _("Travaux"),
-            "works_last_modified": _("Màj travaux"),
+            "works_last_modified": None,
+            "works_last_modified_display": _("Màj travaux"),
             "employments_count": None,
             "employments_last_modified": _("Màj emplois"),
             "educations_count": None,
             "educations_last_modified": _("Màj formations"),
             "fundings_count": None,
-            "fundings_last_modified": _("Màj financements"),
+            "fundings_last_modified": None,
+            "fundings_last_modified_display": _("Màj financements"),
             "person_last_modified": _("Màj profil")
             },
             column_order=[
-                "url", "person_name","person_last_modified","works_count","works_last_modified","drilldown","employment_last_modified",
-                "educations_last_modified","fundings_last_modified"],
+                "url", "person_name","person_last_modified","works_count","works_last_modified_display","drilldown","employment_last_modified",
+                "educations_last_modified","fundings_last_modified_display"],
             height="content",
             hide_index=True)
         

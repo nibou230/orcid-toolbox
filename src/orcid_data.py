@@ -109,6 +109,7 @@ def fetch_orcid_data(orcid: str, timeout: int = 10) -> tuple[pd.DataFrame, Optio
 			columns=[
 				"put-code",
 				"modified-date",
+				"modified-date-display",
 				"modified-by",
 				"title",
 				"type",
@@ -161,7 +162,8 @@ def fetch_orcid_data(orcid: str, timeout: int = 10) -> tuple[pd.DataFrame, Optio
 
 		pub: Dict[str, Any] = {
 			"put-code": summary.get("put-code"),
-			"modified-date": format_timestamp(summary.get("last-modified-date", {}).get("value")) if summary.get("last-modified-date") else None,
+			"modified-date": summary.get("last-modified-date", {}).get("value") if summary.get("last-modified-date") else None,
+			"modified-date-display": format_timestamp(summary.get("last-modified-date", {}).get("value"), freshness=True) if summary.get("last-modified-date") else None,
 			"modified-by": modified_by,
 			"title": _safe_get_title(summary),
 			"type": summary.get("type"),
@@ -183,6 +185,7 @@ def fetch_orcid_data(orcid: str, timeout: int = 10) -> tuple[pd.DataFrame, Optio
 			columns=[
 				"put-code",
 				"modified-date",
+				"modified-date-display",
 				"modified-by",
 				"title",
 				"type",
