@@ -31,6 +31,70 @@ def reset_session_state():
 
 st.set_page_config(page_title=_("app-title"), page_icon=":toolbox:", layout="wide", initial_sidebar_state="expanded")
 
+# Human readable labels for work types
+type_labels = {
+                            "book": _("book"),
+                            "book-chapter": _("book-chapter"),
+                            "conference-paper": _("conference-paper"),
+                            "conference-output": _("conference-output"),
+                            "conference-presentation": _("conference-presentation"),
+                            "conference-poster": _("conference-poster"),
+                            "conference-proceedings": _("conference-proceedings"),
+                            "journal-article": _("journal-article"),
+                            "preprint": _("preprint"),
+                            "dissertation-thesis": _("dissertation-thesis"),
+                            "working-paper": _("working-paper"),
+                            "other": _("other"),
+                            "annotation": _("annotation"),
+                            "book-review": _("book-review"),
+                            "journal-issue": _("journal-issue"),
+                            "review": _("review"),
+                            "transcription": _("transcription"),
+                            "translation": _("translation"),
+                            "blog-post": _("blog-post"),
+                            "dictionary-entry": _("dictionary-entry"),
+                            "encyclopedia-entry": _("encyclopedia-entry"),
+                            "magazine-article": _("magazine-article"),
+                            "newspaper-article": _("newspaper-article"),
+                            "report": _("report"),
+                            "public-speech": _("public-speech"),
+                            "website": _("website"),
+                            "artistic-performance": _("artistic-performance"),
+                            "design": _("design"),
+                            "image": _("image"),
+                            "online-resource": _("online-resource"),
+                            "moving-image": _("moving-image"),
+                            "musical-composition": _("musical-composition"),
+                            "sound": _("sound"),
+                            "cartographic-material": _("cartographic-material"),
+                            "clinical-study": _("clinical-study"),
+                            "data-set": _("data-set"),
+                            "data-management-plan": _("data-management-plan"),
+                            "physical-object": _("physical-object"),
+                            "research-technique": _("research-technique"),
+                            "research-tool": _("research-tool"),
+                            "software": _("software"),
+                            "invention": _("invention"),
+                            "licence": _("licence"),
+                            "patent": _("patent"),
+                            "registered-copyright": _("registered-copyright"),
+                            "standards-and-policy": _("standards-and-policy"),
+                            "trademark": _("trademark"),
+                            "lecture-speech": _("lecture-speech"),
+                            "learning-object": _("learning-object"),
+                            "supervised-student-publication": _("supervised-student-publication")
+                        }
+
+def format_work_type_for_display(raw_type):
+    if pd.isna(raw_type):
+        return raw_type
+
+    raw_value = str(raw_type).strip()
+    if raw_value in type_labels:
+        return type_labels[raw_value]
+    else:
+        return raw_value
+
 with st.sidebar:
     
     st.header(":toolbox: " + _("app-title"))
@@ -301,6 +365,7 @@ with tab_works:
                         selected_types = st.multiselect(
                             _("Filtrer par type:"),
                             types,
+                            format_func=format_work_type_for_display,
                             placeholder=_("Sélectionnez les types de travaux à afficher")
                             )
                         if selected_types:
@@ -342,11 +407,33 @@ with tab_works:
 
             with export_files_col:
 
+                def prepare_works_for_export(df):
+                    df_copy = df.copy()
+
+                    if 'type' in df_copy.columns:
+
+                        def humanize_type(value):
+                            if pd.isna(value):
+                                return value
+                            raw_value = str(value).strip()
+                            if raw_value in type_labels:
+                                return type_labels[raw_value]
+
+                            return " ".join(
+                                word.capitalize()
+                                for word in raw_value.replace("_", " ").replace("-", " ").split()
+                            )
+                        
+                        df_copy['type'] = df_copy['type'].map(humanize_type)
+
+                    return df_copy
+
                 csv_col, xls_col = st.columns(2)
 
                 with csv_col:
                     def make_csv():
-                        return filtered_df.to_csv(index=False).encode('utf-8')
+                        works_df_copy = prepare_works_for_export(filtered_df)
+                        return works_df_copy.to_csv(index=False).encode('utf-8')
                     st.download_button(
                         label=_("Télécharger CSV"),
                         data=make_csv,
@@ -359,8 +446,9 @@ with tab_works:
                 with xls_col:
                     def make_excel():
                          excel_buffer = BytesIO()
+                         works_df_copy = prepare_works_for_export(filtered_df)
                          with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
-                             filtered_df.to_excel(writer, index=False, sheet_name="travaux")
+                             works_df_copy.to_excel(writer, index=False, sheet_name="travaux")
                          excel_buffer.seek(0)
                          return excel_buffer.getvalue()
                 
@@ -415,7 +503,11 @@ with tab_works:
             work_display_columns = ["name", "title", "journal-title", "publication-year", "type", "doi", "url"]
 
         try:
-            st.dataframe(filtered_df,
+            display_df = filtered_df.copy()
+            if 'type' in display_df.columns:
+                display_df['type'] = display_df['type'].map(format_work_type_for_display)
+
+            st.dataframe(display_df,
                             column_config={
                                 "put-code": None,
                                 "modified-date": None,
