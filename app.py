@@ -40,6 +40,7 @@ type_labels = {
                             "conference-presentation": _("conference-presentation"),
                             "conference-poster": _("conference-poster"),
                             "conference-proceedings": _("conference-proceedings"),
+                            "conference-abstract": _("conference-abstract"),
                             "journal-article": _("journal-article"),
                             "preprint": _("preprint"),
                             "dissertation-thesis": _("dissertation-thesis"),
@@ -56,6 +57,7 @@ type_labels = {
                             "encyclopedia-entry": _("encyclopedia-entry"),
                             "magazine-article": _("magazine-article"),
                             "newspaper-article": _("newspaper-article"),
+                            "newsletter-article": _("newsletter-article"),
                             "report": _("report"),
                             "public-speech": _("public-speech"),
                             "website": _("website"),
@@ -82,7 +84,8 @@ type_labels = {
                             "trademark": _("trademark"),
                             "lecture-speech": _("lecture-speech"),
                             "learning-object": _("learning-object"),
-                            "supervised-student-publication": _("supervised-student-publication")
+                            "supervised-student-publication": _("supervised-student-publication"),
+                            "manual": _("manual"),
                         }
 
 def format_work_type_for_display(raw_type):
