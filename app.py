@@ -412,7 +412,8 @@ with tab_works:
 
                 def prepare_works_for_export(df):
                     df_copy = df.copy()
-
+                    
+                    # Humanize type values if the column exists
                     if 'type' in df_copy.columns:
 
                         def humanize_type(value):
@@ -429,17 +430,38 @@ with tab_works:
                         
                         df_copy['type'] = df_copy['type'].map(humanize_type)
 
+                    # Remove columns that are not useful in the export and may contain complex nested data
+                    df_copy.drop(columns=['visibility','external-ids', 'modified-date-display'], inplace=True, errors='ignore')
+
+                    # Humanize modified date for export
+                    if 'modified-date' in df_copy.columns:
+                        df_copy['modified-date'] = df_copy['modified-date'].map(format_timestamp)
+
+                    # Humanize column names
+                    df_copy.rename(columns={
+                        'put-code': _("Put-code"),
+                        'modified-date': _("Dernière modification"),
+                        'modified-by': _("Modifié par"),
+                        'title': _("Titre"),
+                        'type': _("Type"),
+                        'journal-title': _("Titre de revue"),
+                        'publication-year': _("Année"),
+                        'url': _("URL"),
+                        'doi': _("DOI"),
+                        'orcid': _("ORCID") if len(orcid_list) > 1 else None,
+                        'name': _("Chercheur") if len(orcid_list) > 1 else None
+                    }, inplace=True)    
                     return df_copy
 
                 csv_col, xls_col = st.columns(2)
 
                 with csv_col:
-                    def make_csv():
+                    def works_make_csv():
                         works_df_copy = prepare_works_for_export(filtered_df)
                         return works_df_copy.to_csv(index=False).encode('utf-8')
                     st.download_button(
                         label=_("Télécharger CSV"),
-                        data=make_csv,
+                        data=works_make_csv,
                         file_name=_("liste-travaux") + '.csv',
                         mime='text/csv',
                         key="download_csv",
@@ -447,17 +469,17 @@ with tab_works:
                     )
 
                 with xls_col:
-                    def make_excel():
+                    def works_make_excel():
                          excel_buffer = BytesIO()
                          works_df_copy = prepare_works_for_export(filtered_df)
                          with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
-                             works_df_copy.to_excel(writer, index=False, sheet_name="travaux")
+                             works_df_copy.to_excel(writer, index=False, sheet_name=_("Travaux"))
                          excel_buffer.seek(0)
                          return excel_buffer.getvalue()
                 
                     st.download_button(
                         label=_("Télécharger vers Excel"),
-                        data=make_excel,
+                        data=works_make_excel,
                         file_name=_("liste-travaux") + '.xlsx',
                         mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                         key="download_excel",
@@ -607,12 +629,12 @@ with tab_summary:
                 return df_copy
 
             with csv_col:
-                def make_csv():
+                def summary_make_csv():
                     orcid_summary_df_copy = prepare_summary_for_export(orcid_summary_df)
                     return orcid_summary_df_copy.to_csv(index=False).encode('utf-8')
                 st.download_button(
                     label=_("Télécharger CSV"),
-                    data=make_csv,
+                    data=summary_make_csv,
                     file_name=_("resume-orcid") + '.csv',
                     mime='text/csv',
                     key="summary_download_csv",
@@ -620,17 +642,17 @@ with tab_summary:
                 )
 
             with xls_col:
-                def make_excel():
+                def summary_make_excel():
                         excel_buffer = BytesIO()
                         orcid_summary_df_copy = prepare_summary_for_export(orcid_summary_df)
                         with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
-                            orcid_summary_df_copy.to_excel(writer, index=False, sheet_name="travaux")
+                            orcid_summary_df_copy.to_excel(writer, index=False, sheet_name=_("Résumé"))
                         excel_buffer.seek(0)
                         return excel_buffer.getvalue()
             
                 st.download_button(
                     label=_("Télécharger vers Excel"),
-                    data=make_excel,
+                    data=summary_make_excel,
                     file_name=_("resume-orcid") + '.xlsx',
                     mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     key="summary_download_excel",
@@ -671,7 +693,8 @@ with tab_summary:
     st.subheader(_("Distribution des travaux par type"))
 
     if works_count > 0 and 'type' in works_df.columns:
-        st.bar_chart(works_df['type'].value_counts(), horizontal=True, sort=False)
+        mapped_work_types = works_df['type'].map(format_work_type_for_display)
+        st.bar_chart(mapped_work_types.value_counts(), horizontal=True, sort=False)
     else:
         st.warning(_("Aucune donnée de publication disponible pour générer le graphique."))
 
