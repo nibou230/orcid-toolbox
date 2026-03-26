@@ -7,6 +7,9 @@ from src.references_matching import extract_and_process_references, prepare_orci
 from src.overton_data import get_overton_set_url
 import importlib.util
 import gettext
+from openpyxl.styles import PatternFill
+from openpyxl.formatting.rule import FormulaRule
+from openpyxl.utils import get_column_letter
 # TODO: look into using https://docs.python.org/3/library/concurrent.futures.html for parallel
 # data fetching and processing.
 
@@ -473,7 +476,24 @@ with tab_works:
                          excel_buffer = BytesIO()
                          works_df_copy = prepare_works_for_export(filtered_df)
                          with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
-                             works_df_copy.to_excel(writer, index=False, sheet_name=_("Travaux"))
+                            works_df_copy.to_excel(writer, index=False, sheet_name=_("Travaux"))
+
+                            ws = writer.sheets[_("Travaux")]
+
+                            # Adjust column widths
+                            for column_cells in ws.columns:
+                                max_length = 0
+                                column_letter = get_column_letter(column_cells[0].column)
+                                for cell in column_cells:
+                                    try:
+                                        cell_length = len(str(cell.value))
+                                        if cell_length > max_length:
+                                            max_length = cell_length
+                                    except Exception:
+                                        pass
+                                adjusted_width = min((max_length + 2), 50)
+                                ws.column_dimensions[column_letter].width = adjusted_width
+
                          excel_buffer.seek(0)
                          return excel_buffer.getvalue()
                 
@@ -647,6 +667,56 @@ with tab_summary:
                         orcid_summary_df_copy = prepare_summary_for_export(orcid_summary_df)
                         with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
                             orcid_summary_df_copy.to_excel(writer, index=False, sheet_name=_("Résumé"))
+                            ws = writer.sheets[_("Résumé")]
+
+                            last_row = ws.max_row
+
+                            # Adjust column widths
+                            for column_cells in ws.columns:
+                                max_length = 0
+                                column_letter = get_column_letter(column_cells[0].column)
+                                for cell in column_cells:
+                                    try:
+                                        cell_length = len(str(cell.value))
+                                        if cell_length > max_length:
+                                            max_length = cell_length
+                                    except Exception:
+                                        pass
+                                adjusted_width = (max_length + 2) * 1.2
+                                ws.column_dimensions[column_letter].width = adjusted_width
+
+                            # Apply conditional formatting for last modified dates
+                            date_columns = {_('Màj travaux'),_("Màj financements")}
+                            for col_name in date_columns:
+                                column_letter = get_column_letter(orcid_summary_df_copy.columns.get_loc(col_name) + 1)
+                                stale_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+                                aging_fill = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")
+                                fresh_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
+
+                                date_range = f"{column_letter}2:{column_letter}{last_row}"
+
+                                ws.conditional_formatting.add(
+                                    date_range,
+                                    FormulaRule(
+                                        formula=[f'AND({column_letter}2<>"",TODAY()-DATEVALUE({column_letter}2)>730)'],
+                                        fill=stale_fill
+                                    )
+                                )
+                                ws.conditional_formatting.add(
+                                    date_range,
+                                    FormulaRule(
+                                        formula=[f'AND({column_letter}2<>"",TODAY()-DATEVALUE({column_letter}2)>365,TODAY()-DATEVALUE({column_letter}2)<=730)'],
+                                        fill=aging_fill
+                                    )
+                                )
+                                ws.conditional_formatting.add(
+                                    date_range,
+                                    FormulaRule(
+                                        formula=[f'AND({column_letter}2<>"",TODAY()-DATEVALUE({column_letter}2)<=365)'],
+                                        fill=fresh_fill
+                                    )
+                                )
+
                         excel_buffer.seek(0)
                         return excel_buffer.getvalue()
             
