@@ -74,12 +74,27 @@ def _extract_doi_from_external_id(item: Dict[str, Any]) -> Optional[str]:
 
 	return None
 
+def _extract_isbn_from_external_id(item: Dict[str, Any]) -> Optional[str]:
+	if not isinstance(item, dict):
+		return None
+
+	type_ = item.get("external-id-type") or ""
+	if type_.lower() == "isbn":	
+		norm = item.get("external-id-normalized") or {}
+		if isinstance(norm, dict):
+			val = norm.get("value")
+			if val:
+				return val
+			
+	return None
+
 # Processes external IDs from a work summary and extracts DOIs where available.
 def _extract_external_ids(summary: Dict[str, Any]) -> List[Dict[str, str]]:
 	out: List[Dict[str, str]] = []
 	ext = summary.get("external-ids") or {}
 	for item in ext.get("external-id", []) if isinstance(ext, dict) else []:
 		doi = _extract_doi_from_external_id(item)
+		isbn = _extract_isbn_from_external_id(item)
 		out.append({
 			"type": item.get("external-id-type"),
 			"value": item.get("external-id-value"),
@@ -87,6 +102,7 @@ def _extract_external_ids(summary: Dict[str, Any]) -> List[Dict[str, str]]:
 			if item.get("external-id-url")
 			else None,
 			"doi": doi,
+			"isbn": isbn,
 		})
 	return out
 
@@ -118,7 +134,8 @@ def fetch_orcid_data(orcid: str, timeout: int = 10) -> tuple[pd.DataFrame, Optio
 				"external-ids",
 				"visibility",
 				"url",
-				"doi"
+				"doi",
+				"isbn"
 			]
 		)
 		return (empty_df, None)
@@ -154,6 +171,7 @@ def fetch_orcid_data(orcid: str, timeout: int = 10) -> tuple[pd.DataFrame, Optio
 
 		external_ids = _extract_external_ids(summary)
 		dois = [e["doi"] for e in external_ids if e.get("doi")]
+		isbns = [e["isbn"] for e in external_ids if e.get("isbn")]
 
 		try:
 			modified_by = summary.get("source", {}).get("source-name", {}).get("value")
@@ -173,6 +191,7 @@ def fetch_orcid_data(orcid: str, timeout: int = 10) -> tuple[pd.DataFrame, Optio
 			"visibility": summary.get("visibility"),
 			"url": summary.get("url", {}).get("value") if summary.get("url") else None,
 			"doi": dois[0] if dois else None,
+			"isbn": isbns[0] if isbns else None,
 		}
 		publications.append(pub)
 
@@ -194,7 +213,8 @@ def fetch_orcid_data(orcid: str, timeout: int = 10) -> tuple[pd.DataFrame, Optio
 				"external-ids",
 				"visibility",
 				"url",
-				"doi"
+				"doi",
+				"isbn"
 			]
 		)
 	return (df, data, orcid, researcher_name)

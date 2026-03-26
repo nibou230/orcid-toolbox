@@ -451,6 +451,7 @@ with tab_works:
                         'publication-year': _("Année"),
                         'url': _("URL"),
                         'doi': _("DOI"),
+                        'isbn': _("ISBN"),
                         'orcid': _("ORCID") if len(orcid_list) > 1 else None,
                         'name': _("Chercheur") if len(orcid_list) > 1 else None
                     }, inplace=True)    
@@ -564,6 +565,7 @@ with tab_works:
                                 "external-ids": None,
                                 "visibility": None,
                                 "doi": _("DOI"),
+                                "isbn": None,
                                 "url": st.column_config.LinkColumn(_("Lien"), display_text=":material/open_in_new:"),
                                 "orcid": None if len(orcid_list) == 1 else _("ORCID"),
                                 "name": None if len(orcid_list) == 1 else _("Chercheur")
