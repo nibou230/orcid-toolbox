@@ -516,34 +516,34 @@ with tab_works:
                     "pour-reussir-note": _("Dionne"),
                     "lluelles": _("LLuelles"),
                     "mcgill": _("McGill"),
-                    "canadian-journal-of-forest-research": _("Canadian Journal of Forest Research"),
-                    "jama": _("JAMA"),
                     "vancouver-nlm": _("Vancouver - NLM"),
                     "chicago-author-date": _("Chicago"),
                     "ieee": _("IEEE"),
                 }
                 csl_style_for_export = st.selectbox(_("Style de citation"), options=csl_styles.keys(), format_func=lambda key: csl_styles[key], help=_("Style de citation utilisé pour formater les références exportées."))
-                def works_make_citations(csl_format="apa"):
-                    if "locale" in st.session_state:
-                        csl_locale = st.session_state.locale
-                    else:
-                        csl_locale = default_locale
+                def works_make_citations(csl_format="apa", csl_locale=default_locale):
                     # Handle special styles
                     if csl_format == "mcgill" and csl_locale == "fr":
                         csl_format = "mcgill-fr"
                     elif csl_format == "mcgill" and csl_locale == "en":
                         csl_format = "mcgill-en"
-                    elif csl_format == "vancouver-nlm" and csl_locale == "fr":
-                        csl_format = "universite-de-montreal-nlm-fr-ca"
-                    elif csl_format == "ieee" and csl_locale == "fr":
-                        csl_format = "polytechnique-montreal-ieee"
                     citations_df = get_citations(filtered_df, csl_format=csl_format, csl_locale=csl_locale)
                     # Remove rows with errors and keep only the citation text for export
                     citation_lines = citations_df[citations_df['citation_error'].isna()]['citation'].dropna().astype(str).str.strip().tolist()
-                    return "\n\n".join(citation_lines).encode('utf-8')
+                    numbered_citation_lines = []
+                    for row_num, citation in enumerate(citation_lines, start=1):
+                        renumbered = re.sub(r"^\[\s*1\s*\]\s*", f"[{row_num}] ", citation)
+                        renumbered = re.sub(r"^\s*1\.\s*", f"{row_num}. ", renumbered)
+                        numbered_citation_lines.append(renumbered)
+                    return "\n\n".join(numbered_citation_lines).encode('utf-8')
+                
+                if "locale" in st.session_state:
+                    csl_locale = st.session_state.locale
+                else:
+                    csl_locale = default_locale
                 st.download_button(
                     label=_("Télécharger les citations ({style})").format(style=csl_styles[csl_style_for_export]),
-                    data=lambda: works_make_citations(csl_format=csl_style_for_export),
+                    data=lambda: works_make_citations(csl_format=csl_style_for_export, csl_locale=csl_locale),
                     file_name=_("citations") + '.txt',
                     mime='text/plain',
                     key="download_citations",

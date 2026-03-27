@@ -46,10 +46,14 @@ def _bibtex_to_csl_json(bibtex: str) -> Optional[List[Dict[str, Any]]]:
                 csl_item["title"] = title
                 
             if "author" in entry.persons:
-                csl_item["author"] = _parse_persons(entry.persons["author"])
+                authors = _parse_persons(entry.persons["author"])
+                if authors:  # Only add if we got valid authors
+                    csl_item["author"] = authors
                 
             if "editor" in entry.persons:
-                csl_item["editor"] = _parse_persons(entry.persons["editor"])
+                editors = _parse_persons(entry.persons["editor"])
+                if editors:  # Only add if we got valid editors
+                    csl_item["editor"] = editors
                 
             year = _get_field_value(entry.fields.get("year"))
             if year:
@@ -114,6 +118,18 @@ def _bibtex_type_to_csl_type(bibtex_type: str) -> str:
     }
     return type_map.get(bibtex_type.lower(), "entry")
 
+def _orcid_type_to_csl_type(orcid_type: str) -> str:
+    type_map = {
+        "journal-article": "journal-article",
+        "book": "book",
+        "conference-paper": "paper-conference",
+        "proceedings": "book",
+        "thesis": "thesis",
+        "report": "report",
+        "chapter": "chapter"
+    }
+    return type_map.get(orcid_type.lower(), "entry")
+
 # Helper function to parse pybtex Person objects into CSL-JSON author/editor format
 def _parse_persons(persons_list: List) -> List[Dict[str, str]]:
     result = []
@@ -138,6 +154,85 @@ def _parse_persons(persons_list: List) -> List[Dict[str, str]]:
             result.append(author_obj)
     return result
 
+# Fallback function to generate CSL item from ORCID work details when BibTeX is not available
+def _generate_csl_item_from_orcid_work(work: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    try:
+        # Build CSL item with careful None-value handling
+        csl_item: Dict[str, Any] = {
+            "id": str(work.get("put-code", "")),
+            "type": _orcid_type_to_csl_type(work.get("type", "")),
+        }
+        
+        # Only add title if it exists
+        if work.get("title"):
+            csl_item["title"] = work.get("title")
+        
+        # Only add author array if we have meaningful author data (not just from journal-title)
+        # Skip author entirely rather than using journal-title as a fallback
+        # as this produces invalid CSL-JSON
+        
+        # Only add issued if we have a year
+        if work.get("publication-year"):
+            try:
+                year = int(work.get("publication-year"))
+                csl_item["issued"] = {"date-parts": [[year]]}
+            except (ValueError, TypeError):
+                pass
+        
+        # Only add other fields if they're not None
+        if work.get("journal-title"):
+            csl_item["container-title"] = work.get("journal-title")
+        if work.get("volume"):
+            csl_item["volume"] = work.get("volume")
+        if work.get("issue"):
+            csl_item["issue"] = work.get("issue")
+        if work.get("page"):
+            csl_item["page"] = work.get("page")
+        if work.get("doi"):
+            csl_item["DOI"] = work.get("doi")
+        if work.get("url"):
+            csl_item["URL"] = work.get("url")
+        
+        # Only return if we have at least id and type
+        if csl_item.get("id") and csl_item.get("type"):
+            print(f"Generated fallback CSL item from ORCID work: {csl_item}")
+            return csl_item
+        return None
+    except Exception as e:
+        print(f"Error generating CSL item from ORCID work: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+# Convert CSL items to formatted citation string using citeproc
+def _get_citation_from_csl_items(csl_items: List[Dict[str, Any]], csl_format: str, csl_locale: str) -> Optional[str]:
+    try:
+        # Use citeproc to format the citation
+        bib_source = CiteProcJSON(csl_items)
+        style = cp.CitationStylesStyle(csl_format, locale=csl_locale)
+        bibliography = cp.CitationStylesBibliography(style, bib_source, formatter.plain)
+        
+        # Register the first item and get formatted bibliography
+        first_item_id = csl_items[0]["id"]
+        bibliography.register(cp.Citation([cp.CitationItem(first_item_id)]))
+        # bibliography() returns list of formatted citations
+        bib_list = bibliography.bibliography()
+        if bib_list and len(bib_list) > 0:
+            # Extract string from first item (could be string or tuple)
+            citation_item = bib_list[0]
+            if isinstance(citation_item, str):
+                result = citation_item
+            elif isinstance(citation_item, tuple) and len(citation_item) > 0:
+                result = str(citation_item[0])
+            else:
+                result = str(citation_item) if citation_item else None
+            return _strip_braces(result) if result else None
+        return None
+    except Exception as e:
+        print(f"Error formatting CSL items with citeproc: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
 
 # Get citations from the DOI Citation formatter when available
 def _fetch_citation_from_doi(
@@ -163,7 +258,7 @@ def _fetch_citation_from_doi(
     }
 
     response = requests.get(url, params=params, headers=headers, timeout=timeout)
-    #print(f"Requesting citation for DOI {doi} with format {csl_format} and locale {csl_locale}: HTTP {response.status_code}")
+    # print(f"Requesting citation for DOI {doi} with format {csl_format} and locale {csl_locale}: HTTP {response.status_code}")
     response.raise_for_status()
 
     citation = response.text.strip()
@@ -178,38 +273,18 @@ def _fetch_citation_from_orcid(orcid: str, put_code: str, csl_format: str, csl_l
     if citation_retrieved:
         if citation_retrieved.get("citation-type") == "bibtex":
             bibtex = citation_retrieved.get("citation-value")
-            print(f"Received BibTeX for ORCID {orcid} put-code {put_code}: {bibtex}")
+            # print(f"Received BibTeX for ORCID {orcid} put-code {put_code}: {bibtex}")
             
             # Convert BibTeX to CSL-JSON
             csl_items = _bibtex_to_csl_json(bibtex)
             if not csl_items:
                 return None
             
-            # Use citeproc to format the citation
-            bib_source = CiteProcJSON(csl_items)
-            style = cp.CitationStylesStyle(csl_format, locale=csl_locale)
-            bibliography = cp.CitationStylesBibliography(style, bib_source, formatter.plain)
-            
-            # Register the first item and get formatted bibliography
-            first_item_id = csl_items[0]["id"]
-            bibliography.register(cp.Citation([cp.CitationItem(first_item_id)]))
-            # bibliography() returns list of formatted citations
-            bib_list = bibliography.bibliography()
-            if bib_list and len(bib_list) > 0:
-                # Extract string from first item (could be string or tuple)
-                citation_item = bib_list[0]
-                if isinstance(citation_item, str):
-                    result = citation_item
-                elif isinstance(citation_item, tuple) and len(citation_item) > 0:
-                    result = str(citation_item[0])
-                else:
-                    result = str(citation_item) if citation_item else None
-                return _strip_braces(result) if result else None
-            return None
+            return _get_citation_from_csl_items(csl_items, csl_format, csl_locale)
             
         elif citation_retrieved.get("citation-type") == "formatted-unspecified":
             formatted_citation = citation_retrieved.get("citation-value")
-            print(f"Received formatted citation for ORCID {orcid} put-code {put_code}: {formatted_citation}")
+            # print(f"Received formatted citation for ORCID {orcid} put-code {put_code}: {formatted_citation}")
             return _strip_braces(formatted_citation) if formatted_citation else None
         
     return None
@@ -228,8 +303,8 @@ def get_citations(works_df: pd.DataFrame, csl_format: str = "apa", csl_locale: s
                 citation = _fetch_citation_from_doi(doi, csl_format, csl_locale)
                 output_df.at[idx, "citation"] = citation
             except requests.RequestException as exc:
-                message = f"request-error: {exc}"
-                output_df.at[idx, "citation_error"] = message
+                # print(f"Error extracting citation for DOI {doi}: {exc}")
+                output_df.at[idx, "citation_error"] = str(exc)
         
         else:
             put_code = row.get("put-code")
@@ -240,10 +315,21 @@ def get_citations(works_df: pd.DataFrame, csl_format: str = "apa", csl_locale: s
                     output_df.at[idx, "citation"] = citation
 
                 except Exception as exc:
-                    message = f"error: {exc}"
-                    output_df.at[idx, "citation_error"] = message
-            else:
-                output_df.at[idx, "citation_error"] = "no-doi-no-put-code"
+                    # print(f"Error fetching citation for ORCID {orcid} put-code {put_code}: {exc}")
+                    output_df.at[idx, "citation_error"] = str(exc)
+            if citation is None:
+                fallback_csl = _generate_csl_item_from_orcid_work(row)
+                if fallback_csl:
+                    try:
+                        citation = _get_citation_from_csl_items([fallback_csl], csl_format, csl_locale)
+                        output_df.at[idx, "citation"] = citation
+                    except Exception as exc:
+                        # print(f"Error generating citation from fallback CSL item for ORCID {orcid} and put-code {put_code}: {exc}")
+                        output_df.at[idx, "citation_error"] = str(exc)
+                
+                else:
+                    # print(f"No citation could be generated for ORCID {orcid} and put-code {put_code}!!")
+                    output_df.at[idx, "citation_error"] = "No citation could be generated"
 
     return output_df
 
