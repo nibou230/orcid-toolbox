@@ -5,6 +5,7 @@ import pandas as pd
 from src.orcid_data import fetch_orcid_data, format_timestamp
 from src.references_matching import extract_and_process_references, prepare_orcid_works, match_references_to_orcid
 from src.overton_data import get_overton_set_url
+from src.format_citations import get_citations
 import importlib.util
 import gettext
 from openpyxl.styles import PatternFill
@@ -247,7 +248,11 @@ for idx, orcid_input in enumerate(orcid_list):
     # Skip if already loaded
     if orcid_input not in st.session_state.orcid_data:
         with st.spinner(_("Chargement de {orcid_input}...").format(orcid_input=orcid_input)):
-            df, raw, orcid_output, person_name = fetch_orcid_data(orcid_input)
+            try:
+                df, raw, orcid_output, person_name = fetch_orcid_data(orcid_input)
+            except Exception as e:
+                st.error(_("Erreur lors de la récupération des données ORCID pour {orcid_input}: {error}").format(orcid_input=orcid_input, error=str(e)))
+                continue
             works_count = len(df)
 
             summary_works = {
@@ -409,7 +414,7 @@ with tab_works:
                     st.badge(_("{count} travaux sans année de publication").format(count=works_without_year), icon=":material/warning:", color="orange")
         
         with st.expander(":material/export_notes: " + _("Exporter")):
-            export_files_col, export_overton_col = st.columns(2)
+            export_files_col, citation_col, export_overton_col = st.columns(3)
 
             with export_files_col:
 
@@ -457,55 +462,94 @@ with tab_works:
                     }, inplace=True)    
                     return df_copy
 
-                csv_col, xls_col = st.columns(2)
+                def works_make_csv():
+                    works_df_copy = prepare_works_for_export(filtered_df)
+                    return works_df_copy.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label=_("Télécharger CSV"),
+                    data=works_make_csv,
+                    file_name=_("liste-travaux") + '.csv',
+                    mime='text/csv',
+                    key="download_csv",
+                    icon=":material/download:"
+                )
 
-                with csv_col:
-                    def works_make_csv():
-                        works_df_copy = prepare_works_for_export(filtered_df)
-                        return works_df_copy.to_csv(index=False).encode('utf-8')
-                    st.download_button(
-                        label=_("Télécharger CSV"),
-                        data=works_make_csv,
-                        file_name=_("liste-travaux") + '.csv',
-                        mime='text/csv',
-                        key="download_csv",
-                        icon=":material/download:"
-                    )
+                def works_make_excel():
+                    excel_buffer = BytesIO()
+                    works_df_copy = prepare_works_for_export(filtered_df)
+                    with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+                        works_df_copy.to_excel(writer, index=False, sheet_name=_("Travaux"))
 
-                with xls_col:
-                    def works_make_excel():
-                         excel_buffer = BytesIO()
-                         works_df_copy = prepare_works_for_export(filtered_df)
-                         with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
-                            works_df_copy.to_excel(writer, index=False, sheet_name=_("Travaux"))
+                        ws = writer.sheets[_("Travaux")]
 
-                            ws = writer.sheets[_("Travaux")]
+                        # Adjust column widths
+                        for column_cells in ws.columns:
+                            max_length = 0
+                            column_letter = get_column_letter(column_cells[0].column)
+                            for cell in column_cells:
+                                try:
+                                    cell_length = len(str(cell.value))
+                                    if cell_length > max_length:
+                                        max_length = cell_length
+                                except Exception:
+                                    pass
+                            adjusted_width = min((max_length + 2), 50)
+                            ws.column_dimensions[column_letter].width = adjusted_width
 
-                            # Adjust column widths
-                            for column_cells in ws.columns:
-                                max_length = 0
-                                column_letter = get_column_letter(column_cells[0].column)
-                                for cell in column_cells:
-                                    try:
-                                        cell_length = len(str(cell.value))
-                                        if cell_length > max_length:
-                                            max_length = cell_length
-                                    except Exception:
-                                        pass
-                                adjusted_width = min((max_length + 2), 50)
-                                ws.column_dimensions[column_letter].width = adjusted_width
-
-                         excel_buffer.seek(0)
-                         return excel_buffer.getvalue()
+                    excel_buffer.seek(0)
+                    return excel_buffer.getvalue()
+            
+                st.download_button(
+                    label=_("Télécharger vers Excel"),
+                    data=works_make_excel,
+                    file_name=_("liste-travaux") + '.xlsx',
+                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    key="download_excel",
+                    icon=":material/table_view:"
+                )
                 
-                    st.download_button(
-                        label=_("Télécharger vers Excel"),
-                        data=works_make_excel,
-                        file_name=_("liste-travaux") + '.xlsx',
-                        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                        key="download_excel",
-                        icon=":material/table_view:"
-                    )
+            with citation_col:
+                # List of supported CSL styles for export
+                csl_styles = {
+                    "apa": _("APA"),
+                    "mla": _("MLA"),
+                    "pour-reussir-note": _("Dionne"),
+                    "lluelles": _("LLuelles"),
+                    "mcgill": _("McGill"),
+                    "canadian-journal-of-forest-research": _("Canadian Journal of Forest Research"),
+                    "jama": _("JAMA"),
+                    "vancouver-nlm": _("Vancouver - NLM"),
+                    "chicago-author-date": _("Chicago"),
+                    "ieee": _("IEEE"),
+                }
+                csl_style_for_export = st.selectbox(_("Style de citation"), options=csl_styles.keys(), format_func=lambda key: csl_styles[key], help=_("Style de citation utilisé pour formater les références exportées."))
+                def works_make_citations(csl_format="apa"):
+                    if "locale" in st.session_state:
+                        csl_locale = st.session_state.locale
+                    else:
+                        csl_locale = default_locale
+                    # Handle special styles
+                    if csl_format == "mcgill" and csl_locale == "fr":
+                        csl_format = "mcgill-fr"
+                    elif csl_format == "mcgill" and csl_locale == "en":
+                        csl_format = "mcgill-en"
+                    elif csl_format == "vancouver-nlm" and csl_locale == "fr":
+                        csl_format = "universite-de-montreal-nlm-fr-ca"
+                    elif csl_format == "ieee" and csl_locale == "fr":
+                        csl_format = "polytechnique-montreal-ieee"
+                    citations_df = get_citations(filtered_df, csl_format=csl_format, csl_locale=csl_locale)
+                    # Remove rows with errors and keep only the citation text for export
+                    citation_lines = citations_df[citations_df['citation_error'].isna()]['citation'].dropna().astype(str).str.strip().tolist()
+                    return "\n\n".join(citation_lines).encode('utf-8')
+                st.download_button(
+                    label=_("Télécharger les citations ({style})").format(style=csl_styles[csl_style_for_export]),
+                    data=lambda: works_make_citations(csl_format=csl_style_for_export),
+                    file_name=_("citations") + '.txt',
+                    mime='text/plain',
+                    key="download_citations",
+                    icon=":material/article_person:"
+                )
+                st.badge(_("La qualité des citations est limitée."), icon=":material/warning:", color="orange")
             
             with export_overton_col:
                 if len(overton_key.strip()) > 0:

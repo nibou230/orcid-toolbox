@@ -116,7 +116,7 @@ def _extract_external_ids(summary: Dict[str, Any]) -> List[Dict[str, str]]:
 #   - raw_json is the full API response JSON object (or None if error)
 def fetch_orcid_data(orcid: str, timeout: int = 10) -> tuple[pd.DataFrame, Optional[Dict[str, Any]], Optional[str], Optional[str]]:
 	url = f"https://pub.orcid.org/v3.0/{orcid}/record"
-	headers = {"Accept": "application/json"}
+	headers = {"Accept": "application/json", "User-Agent": "ULaval ORCID-Tookbox/1.0"}
 
 	resp = requests.get(url, headers=headers, timeout=timeout)
 	if resp.status_code == 404:
@@ -135,7 +135,8 @@ def fetch_orcid_data(orcid: str, timeout: int = 10) -> tuple[pd.DataFrame, Optio
 				"visibility",
 				"url",
 				"doi",
-				"isbn"
+				"isbn",
+				"orcid"
 			]
 		)
 		return (empty_df, None)
@@ -192,6 +193,7 @@ def fetch_orcid_data(orcid: str, timeout: int = 10) -> tuple[pd.DataFrame, Optio
 			"url": summary.get("url", {}).get("value") if summary.get("url") else None,
 			"doi": dois[0] if dois else None,
 			"isbn": isbns[0] if isbns else None,
+			"orcid": orcid
 		}
 		publications.append(pub)
 
@@ -214,7 +216,19 @@ def fetch_orcid_data(orcid: str, timeout: int = 10) -> tuple[pd.DataFrame, Optio
 				"visibility",
 				"url",
 				"doi",
-				"isbn"
+				"isbn",
+				"orcid"
 			]
 		)
 	return (df, data, orcid, researcher_name)
+
+def fetch_work_details(orcid: str, put_code: str, timeout: int = 10) -> Optional[Dict[str, Any]]:
+	url = f"https://pub.orcid.org/v3.0/{orcid}/work/{put_code}"
+	headers = {"Accept": "application/json", "User-Agent": "ULaval ORCID-Tookbox/1.0"}
+	try:
+		resp = requests.get(url, headers=headers, timeout=timeout)
+		resp.raise_for_status()
+		return resp.json()
+	except requests.RequestException as exc:
+		print(f"Error fetching work details for ORCID {orcid} put-code {put_code}: {exc}")
+		return None
