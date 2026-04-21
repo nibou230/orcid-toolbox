@@ -1,4 +1,0 @@
-# Tell Oryx not to treat src/ as an installable Python package.
-# Without this, Oryx detects src/*.py and attempts a src-layout install,
-# which empties the directory on the deployed app.
-src
