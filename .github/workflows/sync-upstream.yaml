@@ -1,0 +1,49 @@
+# Syncs this fork with the upstream repo (timtomch/orcid-toolbox) daily.
+# A successful sync commits to main, which triggers the Azure DevOps pipeline.
+# Can also be triggered manually from GitHub → Actions → Run workflow.
+
+name: Sync from upstream
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # daily at 06:00 UTC
+  workflow_dispatch:        # allow manual trigger from the GitHub UI
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # needed to push to this fork
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0    # full history required for merge
+
+      - name: Configure git
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream and merge
+        run: |
+          git remote add upstream https://github.com/timtomch/orcid-toolbox.git
+          git fetch upstream main
+
+          # Fast-forward if possible; fall back to a merge commit if histories diverged
+          if git merge --ff-only upstream/main; then
+            echo "Fast-forward merge succeeded."
+          else
+            git merge upstream/main \
+              --no-edit \
+              -m "chore: sync from upstream timtomch/orcid-toolbox"
+          fi
+
+      - name: Push to fork
+        # Only push if there were new commits from upstream
+        run: |
+          if git diff --quiet origin/main HEAD; then
+            echo "Already up to date – nothing to push."
+          else
+            git push origin main
+          fi
