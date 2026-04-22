@@ -1,6 +1,0 @@
-# Override references-tractor's numpy<2.0 constraint.
-# references-tractor==1.0.0 declares numpy>=1.24.0,<2.0 but is compatible
-# with numpy 2.x at runtime. This file is read by uv during the Oryx build
-# phase (via the UV_OVERRIDE app setting) so that numpy==2.4.0 from
-# requirements.txt can coexist with references-tractor.
-numpy>=2.4.0
