@@ -39,6 +39,7 @@ st.set_page_config(page_title=_("app-title"), page_icon=":toolbox:", layout="wid
 type_labels = {
                             "book": _("book"),
                             "book-chapter": _("book-chapter"),
+                            "edited-book": _("edited-book"),
                             "conference-paper": _("conference-paper"),
                             "conference-output": _("conference-output"),
                             "conference-presentation": _("conference-presentation"),
