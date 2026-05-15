@@ -11,8 +11,17 @@ import gettext
 from openpyxl.styles import PatternFill
 from openpyxl.formatting.rule import FormulaRule
 from openpyxl.utils import get_column_letter
+import os
+from dotenv import load_dotenv
 # TODO: look into using https://docs.python.org/3/library/concurrent.futures.html for parallel
 # data fetching and processing.
+
+# Settings
+overton_enabled = True
+
+# Load environment variables from .env file
+load_dotenv()
+overton_key = os.getenv("OVERTON_KEY")
 
 # Set locale from Streamlit context if available, otherwise default to fr
 default_locale = "fr"
@@ -131,8 +140,9 @@ with st.sidebar:
     if "orcid_list" in st.session_state:
         st.button(_("Réinitialiser"), type="secondary", on_click=reset_session_state)
 
-    with st.expander(_("Clés API"), icon=":material/key:"):
-        overton_key = st.text_input(_("Clé API Overton"), help=_("Une clé est nécessaire pour activer le lien direct vers Overton. Vous trouverez la vôtre dans les paramètres de votre compte Overton."))
+    if overton_enabled and not overton_key:
+        with st.expander(_("Clés API"), icon=":material/key:"):
+            overton_key = st.text_input(_("Clé API Overton"), help=_("Une clé est nécessaire pour activer le lien direct vers Overton. Vous trouverez la vôtre dans les paramètres de votre compte Overton."))
 
     st.header(_("Statut"))
 
@@ -553,7 +563,7 @@ with tab_works:
                 st.badge(_("La qualité des citations est limitée."), icon=":material/warning:", color="orange")
             
             with export_overton_col:
-                if len(overton_key.strip()) > 0:
+                if overton_enabled and len(overton_key.strip()) > 0:
                     doi_list_for_overton = filtered_df['doi'].dropna().unique().tolist()
                     works_without_doi = filtered_df['doi'].isna().sum()
                     max_doi_count = 25000
@@ -584,7 +594,7 @@ with tab_works:
                         st.badge(_("1 travail sans DOI ne sera pas inclus dans la requête Overton"), icon=":material/warning:", color="orange")
                     elif works_without_doi > 1:
                         st.badge(_("{count} travaux sans DOI ne seront pas inclus dans la requête Overton").format(count=works_without_doi), icon=":material/warning:", color="orange")
-                else:
+                elif overton_enabled:
                     st.warning(_("Renseignez une clé API dans l'onglet gauche pour activer l'export vers Overton."))
 
         # Show a simple table of works
