@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-04-21 15:37-0400\n"
+"POT-Creation-Date: 2026-05-15 15:56-0400\n"
 "PO-Revision-Date: 2026-02-27 14:42-0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -18,245 +18,245 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: app.py:36 app.py:108
+#: app.py:45 app.py:117
 msgid "app-title"
 msgstr "ORCID toolbox"
 
-#: app.py:40
+#: app.py:49
 msgid "book"
 msgstr "Book"
 
-#: app.py:41
+#: app.py:50
 msgid "book-chapter"
 msgstr "Book chapter"
 
-#: app.py:42
+#: app.py:51
 msgid "edited-book"
 msgstr "Edited book"
 
-#: app.py:43
+#: app.py:52
 msgid "conference-paper"
 msgstr "Conference paper"
 
-#: app.py:44
+#: app.py:53
 msgid "conference-output"
 msgstr "Conference output"
 
-#: app.py:45
+#: app.py:54
 msgid "conference-presentation"
 msgstr "Conference presentation"
 
-#: app.py:46
+#: app.py:55
 msgid "conference-poster"
 msgstr "Conference poster"
 
-#: app.py:47
+#: app.py:56
 msgid "conference-proceedings"
 msgstr "Conference proceedings"
 
-#: app.py:48
+#: app.py:57
 msgid "conference-abstract"
 msgstr "Conference abstract"
 
-#: app.py:49
+#: app.py:58
 msgid "journal-article"
 msgstr "Journal article"
 
-#: app.py:50
+#: app.py:59
 msgid "preprint"
 msgstr "Preprint"
 
-#: app.py:51
+#: app.py:60
 msgid "dissertation-thesis"
 msgstr "Dissertation or thesis"
 
-#: app.py:52
+#: app.py:61
 msgid "working-paper"
 msgstr "Working paper"
 
-#: app.py:53
+#: app.py:62
 msgid "other"
 msgstr "Other"
 
-#: app.py:54
+#: app.py:63
 msgid "annotation"
 msgstr "Annotation"
 
-#: app.py:55
+#: app.py:64
 msgid "book-review"
 msgstr "Book review"
 
-#: app.py:56
+#: app.py:65
 msgid "journal-issue"
 msgstr "Journal issue or edition"
 
-#: app.py:57
+#: app.py:66
 msgid "review"
 msgstr "Review"
 
-#: app.py:58
+#: app.py:67
 msgid "transcription"
 msgstr "Transcription"
 
-#: app.py:59
+#: app.py:68
 msgid "translation"
 msgstr "Translation"
 
-#: app.py:60
+#: app.py:69
 msgid "blog-post"
 msgstr "Blog post"
 
-#: app.py:61
+#: app.py:70
 msgid "dictionary-entry"
 msgstr "Dictionary entry"
 
-#: app.py:62
+#: app.py:71
 msgid "encyclopedia-entry"
 msgstr "Encyclopedia entry"
 
-#: app.py:63
+#: app.py:72
 msgid "magazine-article"
 msgstr "Magazine article"
 
-#: app.py:64
+#: app.py:73
 msgid "newspaper-article"
 msgstr "Newspaper article"
 
-#: app.py:65
+#: app.py:74
 msgid "newsletter-article"
 msgstr "Newsletter article"
 
-#: app.py:66
+#: app.py:75
 msgid "report"
 msgstr "Report"
 
-#: app.py:67
+#: app.py:76
 msgid "public-speech"
 msgstr "Talk, interview, podcast or speech"
 
-#: app.py:68
+#: app.py:77
 msgid "website"
 msgstr "Website"
 
-#: app.py:69
+#: app.py:78
 msgid "artistic-performance"
 msgstr "Artistic output or performance"
 
-#: app.py:70
+#: app.py:79
 msgid "design"
 msgstr "Design"
 
-#: app.py:71
+#: app.py:80
 msgid "image"
 msgstr "Image"
 
-#: app.py:72
+#: app.py:81
 msgid "online-resource"
 msgstr "Interactive resource"
 
-#: app.py:73
+#: app.py:82
 msgid "moving-image"
 msgstr "Moving image or video"
 
-#: app.py:74
+#: app.py:83
 msgid "musical-composition"
 msgstr "Musical composition"
 
-#: app.py:75
+#: app.py:84
 msgid "sound"
 msgstr "Sound"
 
-#: app.py:76
+#: app.py:85
 msgid "cartographic-material"
 msgstr "Cartographic material"
 
-#: app.py:77
+#: app.py:86
 msgid "clinical-study"
 msgstr "Clinical study"
 
-#: app.py:78
+#: app.py:87
 msgid "data-set"
 msgstr "Dataset"
 
-#: app.py:79
+#: app.py:88
 msgid "data-management-plan"
 msgstr "Data management plan"
 
-#: app.py:80
+#: app.py:89
 msgid "physical-object"
 msgstr "Physical object"
 
-#: app.py:81
+#: app.py:90
 msgid "research-technique"
 msgstr "Research protocol or technique"
 
-#: app.py:82
+#: app.py:91
 msgid "research-tool"
 msgstr "Research tool"
 
-#: app.py:83
+#: app.py:92
 msgid "software"
 msgstr "Software"
 
-#: app.py:84
+#: app.py:93
 msgid "invention"
 msgstr "Invention"
 
-#: app.py:85
+#: app.py:94
 msgid "licence"
 msgstr "License"
 
-#: app.py:86
+#: app.py:95
 msgid "patent"
 msgstr "Patent"
 
-#: app.py:87
+#: app.py:96
 msgid "registered-copyright"
 msgstr "Registered copyright"
 
-#: app.py:88
+#: app.py:97
 msgid "standards-and-policy"
 msgstr "Standards or policy"
 
-#: app.py:89
+#: app.py:98
 msgid "trademark"
 msgstr "Trademark"
 
-#: app.py:90
+#: app.py:99
 msgid "lecture-speech"
 msgstr "Lecture"
 
-#: app.py:91
+#: app.py:100
 msgid "learning-object"
 msgstr "Teaching material"
 
-#: app.py:92
+#: app.py:101
 msgid "supervised-student-publication"
 msgstr "Supervised student publication"
 
-#: app.py:93
+#: app.py:102
 msgid "manual"
 msgstr "Manual"
 
-#: app.py:129
+#: app.py:138
 msgid ""
 "Cette application réunit plusieurs outils pour interagir avec les données"
 " ORCID."
 msgstr "This app gathers several tools for interacting with ORCID data."
 
-#: app.py:132
+#: app.py:141
 msgid "Réinitialiser"
 msgstr "Reset"
 
-#: app.py:134
+#: app.py:144
 msgid "Clés API"
 msgstr "API keys"
 
-#: app.py:135
+#: app.py:145
 msgid "Clé API Overton"
 msgstr "Overton API key"
 
-#: app.py:135
+#: app.py:145
 msgid ""
 "Une clé est nécessaire pour activer le lien direct vers Overton. Vous "
 "trouverez la vôtre dans les paramètres de votre compte Overton."
@@ -264,42 +264,51 @@ msgstr ""
 "A key is required to activate direct linking to Overton. You will find "
 "your own key in your Overton account settings."
 
-#: app.py:137
-msgid "Statut"
-msgstr "Status"
+#: app.py:147
+msgid "À propos"
+msgstr "About"
 
-#: app.py:143
+#: app.py:148
+msgid "about_text"
+msgstr ""
+"This app was developed at the Université Laval library "
+"to help working with public [ORCID](https://orcid.org) "
+"profile data.\n\n"
+"[Source code on GitHub](https://github.com/timtomch/orcid-toolbox) (MIT open license).\n\n"
+"Illustration: Oiseau mouche à collier, [Descourtilz, J. T. (1834). Oiseaux brillans du Brésil](https://www.biodiversitylibrary.org/page/47697385) (public domain)."
+
+#: app.py:154
 msgid "Autres activités"
 msgstr "Other activities"
 
-#: app.py:145 app.py:151 app.py:153 app.py:716 app.py:717
+#: app.py:156 app.py:162 app.py:164 app.py:726 app.py:727
 msgid "Résumé"
 msgstr "Summary"
 
-#: app.py:147 app.py:153
+#: app.py:158 app.py:164
 msgid "Suggestions"
 msgstr "Suggestions"
 
-#: app.py:149 app.py:153 app.py:482 app.py:484 app.py:643 app.py:687 app.py:785
+#: app.py:160 app.py:164 app.py:492 app.py:494 app.py:653 app.py:697 app.py:795
 msgid "Travaux"
 msgstr "Works"
 
-#: app.py:153
+#: app.py:164
 msgid "Comparateur"
 msgstr "Compare"
 
-#: app.py:170 app.py:229
+#: app.py:181 app.py:240
 #, python-brace-format
 msgid ""
 "Format d'ORCID incorrect pour: {invalid_orcids}. Le format doit être "
 "XXXX-XXXX-XXXX-XXXX."
 msgstr "Incorrect ORCID format for {invalid_orcids}. Expected XXXX-XXXX-XXXX-XXXX."
 
-#: app.py:180
+#: app.py:191
 msgid "Renseignez un numéro ORCID (ou séparez plusieurs ORCIDs par des virgules):"
 msgstr "Input an ORCID number or separate multiple ORCIDs with commas."
 
-#: app.py:183
+#: app.py:194
 msgid ""
 "Ou téléversez un fichier (format texte, ORCIDs séparés par des virgules "
 "ou un par ligne):"
@@ -307,221 +316,221 @@ msgstr ""
 "Alternatively, upload a file (plain text with ORCIDs separated with "
 "commas or one per line):"
 
-#: app.py:201
+#: app.py:212
 msgid "Valider"
 msgstr "Validate"
 
-#: app.py:221
+#: app.py:232
 msgid "Veuillez fournir au moins un ORCID valide."
 msgstr "Please input at least one valid ORCID"
 
-#: app.py:246
+#: app.py:257
 msgid "Récupération des données ORCID..."
 msgstr "Retrieving ORCID data..."
 
-#: app.py:251
+#: app.py:262
 #, python-brace-format
 msgid "Chargement de {orcid_input}..."
 msgstr "Retrieving {orcid_input}..."
 
-#: app.py:255
+#: app.py:266
 #, python-brace-format
 msgid ""
 "Erreur lors de la récupération des données ORCID pour {orcid_input}: "
 "{error}"
 msgstr "Error when generating Overton set: {error}"
 
-#: app.py:303
+#: app.py:313
 #, python-brace-format
 msgid "Données ORCID chargées pour {orcid}."
 msgstr "ORCID data loaded for {orcid}."
 
-#: app.py:305
+#: app.py:315
 #, python-brace-format
 msgid "Données ORCID chargées pour {count} profils."
 msgstr "ORCID data loaded for {count} profiles."
 
-#: app.py:346
+#: app.py:356
 #, python-brace-format
 msgid "Aucun travail trouvé pour {person_name} ({orcid_input})."
 msgstr "No works found for {person_name} ({orcid_input})"
 
-#: app.py:351
+#: app.py:361
 #, python-brace-format
 msgid "Travaux de {person_name}"
 msgstr "Works for {person_name}"
 
-#: app.py:353 app.py:633
+#: app.py:363 app.py:643
 #, python-brace-format
 msgid "Voir profil {orcid_input}"
 msgstr "Open profile {orcid_input}"
 
-#: app.py:364
+#: app.py:374
 #, python-brace-format
 msgid "Travaux combinés de {count} profils"
 msgstr "Combined works from {count} profiles"
 
-#: app.py:367
+#: app.py:377
 msgid "Filtrer"
 msgstr "Filter"
 
-#: app.py:378
+#: app.py:388
 msgid "Filtrer par type:"
 msgstr "Filter by type:"
 
-#: app.py:381
+#: app.py:391
 msgid "Sélectionnez les types de travaux à afficher"
 msgstr "Select work types to display"
 
-#: app.py:391
+#: app.py:401
 msgid "Filtrer par année de publication:"
 msgstr "Filter by publication year"
 
-#: app.py:402
+#: app.py:412
 msgid "Filtrer par chercheur:"
 msgstr "Filter by author"
 
-#: app.py:404
+#: app.py:414
 msgid "Sélectionnez les chercheurs à afficher"
 msgstr "Select authors to display"
 
-#: app.py:410
+#: app.py:420
 msgid "Travaux affichés"
 msgstr "Works displayed"
 
-#: app.py:410
+#: app.py:420
 msgid "filtrés"
 msgstr "filtered"
 
-#: app.py:413
+#: app.py:423
 msgid "1 travail sans année de publication"
 msgstr "1 work without publication year"
 
-#: app.py:415
+#: app.py:425
 #, python-brace-format
 msgid "{count} travaux sans année de publication"
 msgstr "{count} works without publication year"
 
-#: app.py:417 app.py:678
+#: app.py:427 app.py:688
 msgid "Exporter"
 msgstr "Export"
 
-#: app.py:451
+#: app.py:461
 msgid "Put-code"
 msgstr "Put code"
 
-#: app.py:452 app.py:652
+#: app.py:462 app.py:662
 msgid "Dernière modification"
 msgstr "Last modified"
 
-#: app.py:453
+#: app.py:463
 msgid "Modifié par"
 msgstr "Modified by"
 
-#: app.py:454 app.py:606
+#: app.py:464 app.py:616
 msgid "Titre"
 msgstr "Title"
 
-#: app.py:455 app.py:607
+#: app.py:465 app.py:617
 msgid "Type"
 msgstr "Type"
 
-#: app.py:456 app.py:608
+#: app.py:466 app.py:618
 msgid "Titre de revue"
 msgstr "Journal title"
 
-#: app.py:457 app.py:609 app.py:904 app.py:918 app.py:943 app.py:977
+#: app.py:467 app.py:619 app.py:914 app.py:928 app.py:953 app.py:987
 msgid "Année"
 msgstr "Year"
 
-#: app.py:458
+#: app.py:468
 msgid "URL"
 msgstr "URL"
 
-#: app.py:459 app.py:612 app.py:906 app.py:920 app.py:945 app.py:979
+#: app.py:469 app.py:622 app.py:916 app.py:930 app.py:955 app.py:989
 msgid "DOI"
 msgstr "DOI"
 
-#: app.py:460
+#: app.py:470
 msgid "ISBN"
 msgstr ""
 
-#: app.py:461 app.py:615 app.py:684 app.py:782
+#: app.py:471 app.py:625 app.py:694 app.py:792
 msgid "ORCID"
 msgstr "ORCID"
 
-#: app.py:462 app.py:616
+#: app.py:472 app.py:626
 msgid "Chercheur"
 msgstr "Researcher"
 
-#: app.py:470 app.py:703
+#: app.py:480 app.py:713
 msgid "Télécharger CSV"
 msgstr "CSV export"
 
-#: app.py:472 app.py:506
+#: app.py:482 app.py:516
 msgid "liste-travaux"
 msgstr "works-list"
 
-#: app.py:504 app.py:771
+#: app.py:514 app.py:781
 msgid "Télécharger vers Excel"
 msgstr "Excel export"
 
-#: app.py:515
+#: app.py:525
 #, 
 msgid "APA"
 msgstr "APA"
 
-#: app.py:516
+#: app.py:526
 msgid "MLA"
 msgstr "MLA"
 
-#: app.py:517
+#: app.py:527
 msgid "Dionne"
 msgstr "Dionne"
 
-#: app.py:518
+#: app.py:528
 msgid "LLuelles"
 msgstr "Lluelles"
 
-#: app.py:519
+#: app.py:529
 msgid "McGill"
 msgstr "McGill"
 
-#: app.py:520
+#: app.py:530
 msgid "Vancouver - NLM"
 msgstr "Vancouver - NLM"
 
-#: app.py:521
+#: app.py:531
 msgid "Chicago"
 msgstr "Chicago"
 
-#: app.py:522
+#: app.py:532
 msgid "IEEE"
 msgstr "IEEE"
 
-#: app.py:524
+#: app.py:534
 msgid "Style de citation"
 msgstr "Cittion style"
 
-#: app.py:524
+#: app.py:534
 msgid "Style de citation utilisé pour formater les références exportées."
 msgstr "Citation style to use when exporting."
 
-#: app.py:546
+#: app.py:556
 #, python-brace-format
 msgid "Télécharger les citations ({style})"
 msgstr "Generate bibliography ({style})"
 
-#: app.py:548
+#: app.py:558
 #, 
 msgid "citations"
 msgstr "orcid-bibliography"
 
-#: app.py:553
+#: app.py:563
 msgid "La qualité des citations est limitée."
 msgstr "Quality of generated bibliography is limited."
 
-#: app.py:561
+#: app.py:571
 #, python-brace-format
 msgid ""
 "Le set Overton est limité à {max_count} DOIs. La sélection actuelle en "
@@ -530,29 +539,29 @@ msgstr ""
 "Overton sets only support a maximum of {max_count} DOIs. The current "
 "selection includes {current_count} DOIs."
 
-#: app.py:574
+#: app.py:584
 msgid "Générer le set Overton"
 msgstr "Generate Overton set"
 
-#: app.py:580
+#: app.py:590
 #, python-brace-format
 msgid "Erreur lors de la génération du set Overton: {error}"
 msgstr "Error when generating Overton set: {error}"
 
-#: app.py:582
+#: app.py:592
 msgid "Lancer la requête dans Overton"
 msgstr "Launch query in Overton"
 
-#: app.py:584
+#: app.py:594
 msgid "1 travail sans DOI ne sera pas inclus dans la requête Overton"
 msgstr "1 work without DOI will not be included in Overton query"
 
-#: app.py:586
+#: app.py:596
 #, python-brace-format
 msgid "{count} travaux sans DOI ne seront pas inclus dans la requête Overton"
 msgstr "{count} works without DOI will not be included in Overton query"
 
-#: app.py:588
+#: app.py:598
 msgid ""
 "Renseignez une clé API dans l'onglet gauche pour activer l'export vers "
 "Overton."
@@ -560,49 +569,49 @@ msgstr ""
 "Input a valid API key in the left sidebar to activate Overton "
 "functionality."
 
-#: app.py:614
+#: app.py:624
 msgid "Lien"
 msgstr "Link"
 
-#: app.py:622
+#: app.py:632
 msgid "Aucun travail disponible à afficher."
 msgstr "No works to display"
 
-#: app.py:631
+#: app.py:641
 #, python-brace-format
 msgid "Résumé du profil ORCID de {person_name}"
 msgstr "ORCID profile summary for {person_name}"
 
-#: app.py:635
+#: app.py:645
 #, python-brace-format
 msgid "Créé le: {creation_date}"
 msgstr "Created: {creation_date}"
 
-#: app.py:638
+#: app.py:648
 msgid "Section"
 msgstr "Section"
 
-#: app.py:639
+#: app.py:649
 msgid "Informations personnelles"
 msgstr "Personal info"
 
-#: app.py:640
+#: app.py:650
 msgid "Emploi"
 msgstr "Employment"
 
-#: app.py:641
+#: app.py:651
 msgid "Formation et qualifications"
 msgstr "Education and qualifications"
 
-#: app.py:642 app.py:693
+#: app.py:652 app.py:703
 msgid "Financements"
 msgstr "Funding"
 
-#: app.py:645
+#: app.py:655
 msgid "Complété"
 msgstr "Completed"
 
-#: app.py:665
+#: app.py:675
 #, python-brace-format
 msgid ""
 "Votre section Travaux n'a pas été mise à jour depuis le {last_modified}. "
@@ -613,68 +622,68 @@ msgstr ""
 "{last_modified}. Consider adding or updating your works list to reflect "
 "current activities."
 
-#: app.py:672
+#: app.py:682
 #, python-brace-format
 msgid "Erreur lors de l'affichage du résumé: {error}"
 msgstr "Error when displaying summary: {error}"
 
-#: app.py:685 app.py:784
+#: app.py:695 app.py:794
 msgid "Nom"
 msgstr "Name"
 
-#: app.py:686 app.py:795
+#: app.py:696 app.py:805
 msgid "Màj profil"
 msgstr "Profile updated"
 
-#: app.py:688 app.py:736 app.py:787
+#: app.py:698 app.py:746 app.py:797
 msgid "Màj travaux"
 msgstr "Works updated"
 
-#: app.py:689
+#: app.py:699
 msgid "Emplois"
 msgstr "Employments"
 
-#: app.py:690 app.py:789
+#: app.py:700 app.py:799
 msgid "Màj emplois"
 msgstr "Employment updated"
 
-#: app.py:691
+#: app.py:701
 msgid "Formations"
 msgstr "Educations"
 
-#: app.py:692 app.py:791
+#: app.py:702 app.py:801
 msgid "Màj formations"
 msgstr "Education updated"
 
-#: app.py:694 app.py:736 app.py:794
+#: app.py:704 app.py:746 app.py:804
 msgid "Màj financements"
 msgstr "Funding updated"
 
-#: app.py:705 app.py:773
+#: app.py:715 app.py:783
 msgid "resume-orcid"
 msgstr "orcid-summary"
 
-#: app.py:783
+#: app.py:793
 msgid "Ouvrir détails"
 msgstr "Open details"
 
-#: app.py:803
+#: app.py:813
 msgid "Distribution des travaux par année de publication"
 msgstr "Distribution of works by publication year"
 
-#: app.py:808 app.py:816
+#: app.py:818 app.py:826
 msgid "Aucune donnée de publication disponible pour générer le graphique."
 msgstr "Not enough publication data to generate graph."
 
-#: app.py:810
+#: app.py:820
 msgid "Distribution des travaux par type"
 msgstr "Distribution of works by type"
 
-#: app.py:819
+#: app.py:829
 msgid "Cette section n'est pas encore implémentée."
 msgstr "This section hasn't been implemented yet."
 
-#: app.py:824
+#: app.py:834
 msgid ""
 "Le comparateur ne peut être utilisé qu'avec un seul ORCID à la fois. "
 "Utilisez l'onglet 'Résumé' pour voir les données agrégées."
@@ -682,7 +691,7 @@ msgstr ""
 "This section can only be used on a single ORCID profile. Use the Summary "
 "tab to view aggregated data."
 
-#: app.py:828
+#: app.py:838
 #, python-brace-format
 msgid ""
 "Aucun travail trouvé pour {person_name} ({orcid_input}). Le comparateur "
@@ -691,7 +700,7 @@ msgstr ""
 "No works found for {person_name} ({orcid_input}). This function requires "
 "a list of works."
 
-#: app.py:832
+#: app.py:842
 msgid ""
 "Cette fonctionalité nécessite la présence d'une bibliothèque pour "
 "l'extraction des références, telle que 'transformers' ou "
@@ -702,22 +711,22 @@ msgstr ""
 "'references_tractor' to work. Please ensure at least one is installed "
 "before continuing."
 
-#: app.py:839
+#: app.py:849
 msgid ""
 "Téléchargez un fichier texte contenant des références bibliographiques à "
 "extraire :"
 msgstr "Upload a text file with bibliographic references to be extracted."
 
-#: app.py:849
+#: app.py:859
 msgid "Extraction des références en cours..."
 msgstr "Extracing references..."
 
-#: app.py:853
+#: app.py:863
 #, python-brace-format
 msgid "Traitement des références... ({current}/{total})"
 msgstr "Processing references... ({current}/{total})"
 
-#: app.py:862
+#: app.py:872
 #, python-brace-format
 msgid ""
 "{valid} références valides extraites, {invalid} références invalides "
@@ -726,83 +735,83 @@ msgstr ""
 "{valid} valid references were extracted, {invalid} invalid references "
 "remaining"
 
-#: app.py:868
+#: app.py:878
 msgid "**Contrôle de correspondance :**"
 msgstr "**Matching control :**"
 
-#: app.py:871
+#: app.py:881
 msgid "Seuil de confiance (%)"
 msgstr "Confidence threshold (%)"
 
-#: app.py:880
+#: app.py:890
 msgid "Références extraites"
 msgstr "Extracted references"
 
-#: app.py:882
+#: app.py:892
 msgid "Trouvées dans ORCID"
 msgstr "Found on ORCID profile"
 
-#: app.py:884
+#: app.py:894
 msgid "Manquantes dans ORCID"
 msgstr "Missing from ORCID profile"
 
-#: app.py:888
+#: app.py:898
 #, python-brace-format
 msgid "{count} références trouvées dans ORCID"
 msgstr "{count} references found on ORCID profile"
 
-#: app.py:889
+#: app.py:899
 msgid "Trier par :"
 msgstr "Order by:"
 
-#: app.py:889
+#: app.py:899
 msgid "Score"
 msgstr "Score"
 
-#: app.py:889
+#: app.py:899
 msgid "Alpha"
 msgstr "Alpha"
 
-#: app.py:889
+#: app.py:899
 msgid "Ordre"
 msgstr "Order"
 
-#: app.py:897 app.py:936
+#: app.py:907 app.py:946
 msgid "Texte original:"
 msgstr "Original text"
 
-#: app.py:902 app.py:916 app.py:941 app.py:975
+#: app.py:912 app.py:926 app.py:951 app.py:985
 msgid "Journal"
 msgstr "Journal"
 
-#: app.py:908 app.py:947 app.py:981
+#: app.py:918 app.py:957 app.py:991
 msgid "Entités détectées :"
 msgstr "Detected entities :"
 
-#: app.py:914 app.py:953
+#: app.py:924 app.py:963
 msgid "Score titre"
 msgstr "Title score"
 
-#: app.py:923
+#: app.py:933
 msgid "Références à valider"
 msgstr "References requiring validation"
 
-#: app.py:955
+#: app.py:965
 #, python-brace-format
 msgid "Journal: {journal} (score {score})"
 msgstr "Journal: {journal} (score {score})"
 
-#: app.py:957
+#: app.py:967
 #, python-brace-format
 msgid "Année: {year} (score {score})"
 msgstr "Year: {year} (score {score})"
 
-#: app.py:959
+#: app.py:969
 #, python-brace-format
 msgid "DOI: {doi} (score {score})"
 msgstr "DOI: {doi} (score {score})"
 
-#: app.py:961
+#: app.py:971
 msgid "Références non trouvées"
 msgstr "References not found"
 
@@ -811,4 +820,7 @@ msgstr "References not found"
 
 #~ msgid "JAMA"
 #~ msgstr "JAMA"
+
+#~ msgid "Statut"
+#~ msgstr "Status"
 
