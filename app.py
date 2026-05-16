@@ -11,8 +11,17 @@ import gettext
 from openpyxl.styles import PatternFill
 from openpyxl.formatting.rule import FormulaRule
 from openpyxl.utils import get_column_letter
+import os
+from dotenv import load_dotenv
 # TODO: look into using https://docs.python.org/3/library/concurrent.futures.html for parallel
 # data fetching and processing.
+
+# Settings
+overton_enabled = True
+
+# Load environment variables from .env file
+load_dotenv()
+overton_key = os.getenv("OVERTON_KEY")
 
 # Set locale from Streamlit context if available, otherwise default to fr
 default_locale = "fr"
@@ -25,6 +34,10 @@ if hasattr(st.context, "locale"):
 
 if "locale" not in st.session_state:
     st.session_state.locale = default_locale
+
+# Keep locale in sync with sidebar selector without forcing manual reruns.
+if "locale_picker" in st.session_state and st.session_state.locale != st.session_state.locale_picker:
+    st.session_state.locale = st.session_state.locale_picker
 
 # Set up gettext translations
 _ = gettext.translation('messages', localedir='loc', languages=[st.session_state.locale], fallback=True).gettext
@@ -107,34 +120,31 @@ with st.sidebar:
     
     st.header(":toolbox: " + _("app-title"))
 
-    # Language chooser
-    lang_map = {
-    "fr": "FR",
-    "en": "EN"
-    }
+    # Compact language chooser with clickable emojis.
+    if "locale_picker" not in st.session_state:
+        st.session_state.locale_picker = st.session_state.locale
 
-    selected_locale = st.segmented_control(
+    st.radio(
         "lang",
-        options=lang_map.keys(),
-        default=st.session_state.locale,
-        format_func=lambda option: lang_map[option],
-        selection_mode="single",
-        label_visibility="collapsed"
+        options=["fr", "en"],
+        format_func=lambda option: "🇫🇷" if option == "fr" else "🇬🇧",
+        key="locale_picker",
+        horizontal=True,
+        label_visibility="collapsed",
     )
-
-    if selected_locale and selected_locale != st.session_state.locale:
-        st.session_state.locale = selected_locale
-        st.rerun()
-
-    st.text(_("Cette application réunit plusieurs outils pour interagir avec les données ORCID."))
 
     if "orcid_list" in st.session_state:
         st.button(_("Réinitialiser"), type="secondary", on_click=reset_session_state)
 
-    with st.expander(_("Clés API"), icon=":material/key:"):
-        overton_key = st.text_input(_("Clé API Overton"), help=_("Une clé est nécessaire pour activer le lien direct vers Overton. Vous trouverez la vôtre dans les paramètres de votre compte Overton."))
+    st.image("img/oiseau-orcidee.png")
 
-    st.header(_("Statut"))
+    if overton_enabled and not overton_key:
+        with st.expander(_("Clés API"), icon=":material/key:"):
+            overton_key = st.text_input(_("Clé API Overton"), help=_("Une clé est nécessaire pour activer le lien direct vers Overton. Vous trouverez la vôtre dans les paramètres de votre compte Overton."))
+
+    with st.expander(_("À propos"), icon=":material/help:"):
+        st.image("img/BIBL-logo.png", link="https://www.bibl.ulaval.ca/services/soutien-a-ledition-savante-et-a-la-recherche/identifiants-uniques-perennes-orcid-doi-isbn-ror")
+        st.markdown(_("about_text"))
 
 
 if st.query_params and "tab" in st.query_params and st.query_params["tab"] in ["works", "activites", "resume", "suggestions"]:
@@ -296,13 +306,9 @@ for idx, orcid_input in enumerate(orcid_list):
                 'updated_person': updated_person
             }
             multifile_progress.progress((idx + 1) / len(orcid_list), text=progress_text + f" ({idx + 1}/{len(orcid_list)})")
-    
-# Show status in sidebar
-with st.sidebar:
-    if len(orcid_list) == 1:
-        st.success(_("Données ORCID chargées pour {orcid}.").format(orcid=orcid_list[0]))
-    else:
-        st.success(_("Données ORCID chargées pour {count} profils.").format(count=len(orcid_list)))
+        
+        # Show status message after loading ORCID data
+        st.toast(_("Données ORCID chargées pour {orcid}.").format(orcid=orcid_list[0]), icon=":material/check_circle:")
 
 multifile_progress.empty()
 # For backward compatibility with single ORCID code
@@ -553,7 +559,7 @@ with tab_works:
                 st.badge(_("La qualité des citations est limitée."), icon=":material/warning:", color="orange")
             
             with export_overton_col:
-                if len(overton_key.strip()) > 0:
+                if overton_enabled and len(overton_key.strip()) > 0:
                     doi_list_for_overton = filtered_df['doi'].dropna().unique().tolist()
                     works_without_doi = filtered_df['doi'].isna().sum()
                     max_doi_count = 25000
@@ -584,7 +590,7 @@ with tab_works:
                         st.badge(_("1 travail sans DOI ne sera pas inclus dans la requête Overton"), icon=":material/warning:", color="orange")
                     elif works_without_doi > 1:
                         st.badge(_("{count} travaux sans DOI ne seront pas inclus dans la requête Overton").format(count=works_without_doi), icon=":material/warning:", color="orange")
-                else:
+                elif overton_enabled:
                     st.warning(_("Renseignez une clé API dans l'onglet gauche pour activer l'export vers Overton."))
 
         # Show a simple table of works
@@ -858,8 +864,8 @@ with tab_compare:
             # Clear progress bar when done
             extraction_progress.empty()
 
-            with st.sidebar:
-                st.success(_("{valid} références valides extraites, {invalid} références invalides ignorées.").format(valid=len(screened_refs), invalid=len(invalid_refs)))
+            
+            st.toast(_("{valid} références valides extraites, {invalid} références invalides ignorées.").format(valid=len(screened_refs), invalid=len(invalid_refs)), icon=":material/check_circle:")
 
     with col_controls:
         

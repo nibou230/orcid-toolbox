@@ -35,6 +35,23 @@ pip install -e references-tractor/. --prefer-binary
 
 The `--prefer-binary` flag was necessary on my (older) Intel-based Mac, in order to prevent `pip` from trying to compile the required binaries from scratch, which was causing issues. Your mileage may vary.
 
+### Optional Overton integration
+If your institution subscribes to [Overton](https://www.overton.io/), you can enable automatically generating 
+Overton sets from the list of works for impact analysis. 
+To enable Overton, set this variable to `true` in `app.py`:
+
+```python
+overton_enabled = True
+```
+
+The API key for Overton is provided via `.env` file:
+
+```
+OVERTON_KEY=your-key
+```
+
+If an environment variable `OVERTON_KEY` is available, the app will use that. If not, it will display a form for the user to input their own.
+
 ## Running
 
 Once all the dependencies have been installed, start the web app:
