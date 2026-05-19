@@ -42,9 +42,12 @@ if "locale_picker" in st.session_state and st.session_state.locale != st.session
 # Set up gettext translations
 _ = gettext.translation('messages', localedir='loc', languages=[st.session_state.locale], fallback=True).gettext
 
-def reset_session_state():
+def reset_session_state(except_keys=None):
+    if except_keys is None:
+        except_keys = []
     for key in list(st.session_state.keys()):
-        st.session_state.pop(key)
+        if key not in except_keys:
+            st.session_state.pop(key)
 
 st.set_page_config(page_title=_("app-title"), page_icon=":toolbox:", layout="wide", initial_sidebar_state="expanded")
 
@@ -134,7 +137,7 @@ with st.sidebar:
     )
 
     if "orcid_list" in st.session_state:
-        st.button(_("Réinitialiser"), type="secondary", on_click=reset_session_state)
+        st.button(_("Réinitialiser"), type="secondary", on_click=reset_session_state, args=(["locale_picker"],))
 
     st.image("img/oiseau-orcidee.png")
 
@@ -289,7 +292,12 @@ for idx, orcid_input in enumerate(orcid_list):
                 } if raw.get('activities-summary', {}).get('fundings', {}).get('last-modified-date') else None
             
             try:
-                updated_person = raw.get('person', {}).get('last-modified-date', {}).get('value')
+                created_person = raw.get('history', {}).get('submission-date', {}).get('value')
+            except Exception:
+                created_person = None
+
+            try:
+                updated_person = raw.get('history', {}).get('last-modified-date', {}).get('value')
             except Exception:
                 updated_person = None
 
@@ -303,6 +311,7 @@ for idx, orcid_input in enumerate(orcid_list):
                 'summary_employments': summary_employments,
                 'summary_educations': summary_educations,
                 'summary_fundings': summary_fundings,
+                'created_person': created_person,
                 'updated_person': updated_person
             }
             multifile_progress.progress((idx + 1) / len(orcid_list), text=progress_text + f" ({idx + 1}/{len(orcid_list)})")
@@ -323,6 +332,7 @@ if len(orcid_list) == 1:
     summary_educations = st.session_state.orcid_data[orcid_input]['summary_educations']
     summary_fundings = st.session_state.orcid_data[orcid_input]['summary_fundings']
     updated_person = st.session_state.orcid_data[orcid_input]['updated_person']
+    created_person = st.session_state.orcid_data[orcid_input]['created_person']
 
 # Create summary dataframe from all loaded ORCID data
 orcid_summary_df = pd.DataFrame([
@@ -330,6 +340,7 @@ orcid_summary_df = pd.DataFrame([
         'orcid': orcid_id,
         'url': 'https://orcid.org/' + orcid_id,
         'person_name': data['person_name'],
+        'person_created': format_timestamp(data['created_person']) if data['created_person'] else None,
         'person_last_modified': format_timestamp(data['updated_person']) if data['updated_person'] else None,
         'works_count': data['works_count'],
         'works_last_modified': data['summary_works']['last_modified'] if data['summary_works'] else None,
@@ -638,7 +649,7 @@ with tab_summary:
             with col2:
                 st.link_button(_("Voir profil {orcid_input}").format(orcid_input=orcid_input), raw.get('orcid-identifier', {}).get('uri'), icon=":material/open_in_new:")
 
-            st.write(_("Créé le: {creation_date}").format(creation_date=format_timestamp(raw.get('history', {}).get('submission-date', {}).get('value'))))
+            st.write(_("Créé le: {creation_date}").format(creation_date=format_timestamp(created_person) if created_person else "N/A"))
 
             updated_table = {
                 _("Section"): [
@@ -689,6 +700,7 @@ with tab_summary:
                 df_copy.rename(columns={
                     'orcid': _("ORCID"),
                     'person_name': _("Nom"),
+                    'person_created': _("Création profil"),
                     'person_last_modified': _("Màj profil"),
                     'works_count': _("Travaux"),
                     'works_last_modified': _("Màj travaux"),
@@ -798,10 +810,11 @@ with tab_summary:
             "fundings_count": None,
             "fundings_last_modified": None,
             "fundings_last_modified_display": _("Màj financements"),
+            "person_created": _("Création profil"),
             "person_last_modified": _("Màj profil")
             },
             column_order=[
-                "url", "person_name","person_last_modified","works_count","works_last_modified_display","drilldown","employment_last_modified",
+                "url", "person_name","person_created","person_last_modified","works_count","works_last_modified_display","drilldown","employment_last_modified",
                 "educations_last_modified","fundings_last_modified_display"],
             height="content",
             hide_index=True)
