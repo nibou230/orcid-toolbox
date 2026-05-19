@@ -50,7 +50,7 @@ def reset_session_state(except_keys=None):
             st.session_state.pop(key)
     st.query_params.clear()
 
-st.set_page_config(page_title=_("app-title"), page_icon=":toolbox:", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title=_("app-title"), page_icon=":toolbox:", layout="wide", initial_sidebar_state=250)
 
 # Human readable labels for work types
 type_labels = {
@@ -120,6 +120,12 @@ def format_work_type_for_display(raw_type):
     else:
         return raw_value
 
+@st.dialog(_("À propos"))
+def about_dialog():
+    st.markdown(_("about_text"))
+    with st.container(horizontal_alignment = "right"):
+        st.image("img/BIBL-logo.png", width=200, link="https://www.bibl.ulaval.ca/services/soutien-a-ledition-savante-et-a-la-recherche/identifiants-uniques-perennes-orcid-doi-isbn-ror")
+
 with st.sidebar:
     
     st.header(":toolbox: " + _("app-title"))
@@ -145,10 +151,7 @@ with st.sidebar:
         with st.expander(_("Clés API"), icon=":material/key:"):
             overton_key = st.text_input(_("Clé API Overton"), help=_("Une clé est nécessaire pour activer le lien direct vers Overton. Vous trouverez la vôtre dans les paramètres de votre compte Overton."))
 
-    with st.expander(_("À propos"), icon=":material/help:"):
-        st.image("img/BIBL-logo.png", link="https://www.bibl.ulaval.ca/services/soutien-a-ledition-savante-et-a-la-recherche/identifiants-uniques-perennes-orcid-doi-isbn-ror")
-        st.markdown(_("about_text"))
-
+    st.button(_("À propos"), icon=":material/help:", on_click=about_dialog)
 
 if st.query_params and "tab" in st.query_params and st.query_params["tab"] in ["works", "activites", "resume", "suggestions"]:
     match st.query_params["tab"]:
