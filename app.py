@@ -48,6 +48,7 @@ def reset_session_state(except_keys=None):
     for key in list(st.session_state.keys()):
         if key not in except_keys:
             st.session_state.pop(key)
+    st.query_params.clear()
 
 st.set_page_config(page_title=_("app-title"), page_icon=":toolbox:", layout="wide", initial_sidebar_state="expanded")
 
@@ -136,8 +137,7 @@ with st.sidebar:
         label_visibility="collapsed",
     )
 
-    if "orcid_list" in st.session_state:
-        st.button(_("Réinitialiser"), type="secondary", on_click=reset_session_state, args=(["locale_picker"],))
+    reset_container = st.container()
 
     st.image("img/oiseau-orcidee.png")
 
@@ -317,7 +317,7 @@ for idx, orcid_input in enumerate(orcid_list):
             multifile_progress.progress((idx + 1) / len(orcid_list), text=progress_text + f" ({idx + 1}/{len(orcid_list)})")
         
         # Show status message after loading ORCID data
-        st.toast(_("Données ORCID chargées pour {orcid}.").format(orcid=orcid_list[0]), icon=":material/check_circle:")
+        st.toast(_("Données ORCID chargées pour {orcid}.").format(orcid=orcid_input), icon=":material/check_circle:")
 
 multifile_progress.empty()
 # For backward compatibility with single ORCID code
@@ -837,6 +837,11 @@ with tab_summary:
 with tab_suggest:
     st.warning(_("Cette section n'est pas encore implémentée."))
 
+# Display reset button if there are ORCID profiles loaded
+with reset_container:
+    if "orcid_list" in st.session_state:
+        st.button(_("Réinitialiser"), type="secondary", on_click=reset_session_state, args=(["locale_picker"],))
+
 with tab_compare:
 
     if len(orcid_list) > 1:
@@ -999,6 +1004,3 @@ with tab_compare:
                         with col_outer:
                             st.caption(_("Entités détectées :"))
                             st.json(ref_ner, expanded=False)
-            
-
-
