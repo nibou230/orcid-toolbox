@@ -1,0 +1,161 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Azure Pipelines – ORCID Toolbox
+# Target: Azure App Service named bibl-mrs-pr-app-orcid
+#
+# Strategy: source-only zip + Oryx server-side build.
+#   The build agent zips only the source code (~few MB). Azure's Oryx build
+#   system then runs pip install on the Linux host during deployment, so all
+#   native extensions (torch, tokenizers, sentencepiece …) are compiled for
+#   the correct platform and disk pressure on the agent is eliminated.
+#
+# Prerequisites (configure once in Azure DevOps / Azure Portal):
+#   1. Create a Service Connection to your Azure subscription and set its name
+#      as the value of the `azureServiceConnection` variable below.
+#   2. In the App Service → Configuration → Application settings, add:
+#        WEBSITES_PORT                  = 8000
+#        SCM_DO_BUILD_DURING_DEPLOYMENT = true
+#        POST_BUILD_COMMAND             = python -m nltk.downloader -d $VIRTUAL_ENV/nltk_data punkt punkt_tab
+#
+#      SCM_DO_BUILD_DURING_DEPLOYMENT enables Oryx to run uv pip install on the
+#      Linux host during deployment. A patched wheel for references-tractor
+#      (numpy<2.0 constraint removed) is built on the Ubuntu agent and shipped
+#      in the zip under wheels/. requirements.txt references it as a local path
+#      so uv installs it directly without hitting the numpy version conflict.
+#      POST_BUILD_COMMAND downloads the NLTK corpora into $VIRTUAL_ENV/nltk_data
+#      which NLTK already searches by default – no NLTK_DATA env var needed.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# The YAML lives in Azure DevOps; the application source lives in GitHub.
+# Pushes to the GitHub repo trigger this pipeline via the resource trigger below.
+trigger: none
+
+resources:
+  repositories:
+    - repository: githubSource
+      type: github
+      endpoint: 'GITHUB-NIBOU230'
+      name: 'nibou230/orcid-toolbox'
+      ref: refs/heads/main
+      trigger:
+        branches:
+          include:
+            - main
+        paths:
+          include:
+            - app.py
+            - requirements.txt
+            - src/**
+            - loc/**
+
+variables:
+  azureServiceConnection: 'BIBL-MRS-PR'
+  webAppName: 'bibl-mrs-pr-app-orcid'
+  pythonVersion: '3.14'
+  artifactName: 'orcid-toolbox-drop'
+
+stages:
+
+  # ───────────────────────────── BUILD ─────────────────────────────────────
+  - stage: Build
+    displayName: 'Build'
+    jobs:
+      - job: BuildJob
+        displayName: 'Compile translations & package source'
+        pool:
+          vmImage: 'ubuntu-latest'
+
+        steps:
+          - checkout: githubSource
+            fetchDepth: 1
+
+          - task: UsePythonVersion@0
+            displayName: 'Use Python $(pythonVersion)'
+            inputs:
+              versionSpec: '$(pythonVersion)'
+              addToPath: true
+
+          # Convert requirements.txt (UTF-16) to UTF-8 for Oryx/uv.
+          - script: |
+              python - <<'EOF'
+              with open('requirements.txt', 'rb') as f:
+                  content = f.read().decode('utf-16')
+              with open('requirements.txt', 'w', encoding='utf-8') as f:
+                  f.write(content)
+              EOF
+            displayName: 'Convert requirements.txt to UTF-8'
+
+          # Build a patched wheel for references-tractor on the Ubuntu agent.
+          # The numpy<2.0 upper bound is removed before building so uv can
+          # install it alongside numpy==2.4.0 without a conflict.
+          # The wheel is added to requirements.txt as a relative path reference
+          # (./wheels/<file>) which uv resolves from /home/site/wwwroot at
+          # deploy time – no UV_OVERRIDE env var needed.
+          - script: |
+              pip install --quiet --no-cache-dir hatchling
+              git clone --depth 1 https://github.com/sirisacademic/references-tractor.git /tmp/rt
+              sed -i 's/numpy>=1.24.0,<2.0/numpy>=1.24.0/' /tmp/rt/pyproject.toml
+              mkdir -p wheels
+              pip wheel --quiet --no-deps --wheel-dir wheels /tmp/rt
+              WHEEL=$(ls wheels/*.whl | xargs basename)
+              echo "references-tractor @ ./wheels/${WHEEL}" >> requirements.txt
+            displayName: 'Build patched references-tractor wheel'
+
+          # Babel is only needed here to compile .po → .mo; it is not
+          # pre-installed into the artifact so it costs nothing on disk.
+          - script: |
+              pip install --quiet --no-cache-dir babel
+              pybabel compile -d loc
+            displayName: 'Compile translation files (.po → .mo)'
+
+          # Zip only the application source – no .python_packages folder.
+          # Oryx will run `uv pip install -r requirements.txt` on the Linux host
+          # during deployment, producing correct Linux native binaries.
+          # references-tractor is included via the injected git URL above;
+          # uv-overrides.txt (also in the zip) relaxes its numpy<2.0 constraint.
+          - task: ArchiveFiles@2
+            displayName: 'Create source-only deployment zip'
+            inputs:
+              rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+              includeRootFolder: false
+              archiveType: 'zip'
+              archiveFile: '$(Build.ArtifactStagingDirectory)/$(artifactName).zip'
+              replaceExistingArchive: true
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish artifact'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: '$(artifactName)'
+              publishLocation: 'Container'
+
+  # ───────────────────────────── DEPLOY ────────────────────────────────────
+  - stage: Deploy
+    displayName: 'Deploy to Azure App Service'
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - deployment: DeployJob
+        displayName: 'Deploy bibl-mrs-pr-app-orcid'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: 'bibl-mrs-pr-orcid'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebApp@1
+                  displayName: 'Deploy zip to Azure Web App'
+                  inputs:
+                    azureSubscription: '$(azureServiceConnection)'
+                    appType: 'webAppLinux'
+                    appName: '$(webAppName)'
+                    package: '$(Pipeline.Workspace)/$(artifactName)/$(artifactName).zip'
+                    runtimeStack: 'PYTHON|$(pythonVersion)'
+                    # SCM_DO_BUILD_DURING_DEPLOYMENT=true (set in App Service
+                    # application settings) makes Oryx run pip install here.
+                    # Streamlit listens on 8000; WEBSITES_PORT must match.
+                    startUpCommand: >-
+                      python -m streamlit run app.py
+                      --server.port 8000
+                      --server.address 0.0.0.0
+                      --server.headless true
