@@ -627,11 +627,11 @@ msgstr "Name"
 
 #: app.py:700 app.py:810
 msgid "Création profil"
-msgstr "Profile created"
+msgstr "Record created"
 
 #: app.py:701 app.py:811
 msgid "Màj profil"
-msgstr "Profile updated"
+msgstr "Last updated"
 
 #: app.py:703 app.py:751 app.py:802
 msgid "Màj travaux"
