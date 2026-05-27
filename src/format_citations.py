@@ -333,3 +333,43 @@ def get_citations(works_df: pd.DataFrame, csl_format: str = "apa", csl_locale: s
 
     return output_df
 
+# Functions to export selected references in BibTeX format
+def _escape_bibtex_value(value: Any) -> str:
+    if value is None:
+        return ""
+    return str(value).replace("\\", "\\\\").replace("{", "\\{").replace("}", "\\}")
+
+
+def _make_bibtex_key(ref: Dict[str, Any]) -> str:
+    year = ref.get("ref_year") or "nodate"
+    title = ref.get("ref_orig_title") or ref.get("ref_title") or f"reference-{ref.get('ref_number', 'x')}"
+    normalized_title = re.sub(r"[^a-z0-9]+", "", str(title).lower())[:24]
+    if not normalized_title:
+        normalized_title = f"reference{ref.get('ref_number', 'x')}"
+    return f"ref{ref.get('ref_number', 'x')}_{year}_{normalized_title}"
+
+
+def selected_refs_to_bibtex(selected_refs: List[Dict[str, Any]]) -> bytes:
+    entries = []
+    for ref in selected_refs:
+        entry_type = "article" if ref.get("ref_journal") or ref.get("ref_doi") else "misc"
+        entry_lines = [f"@{entry_type}{{{_make_bibtex_key(ref)},"]
+
+        title = ref.get("ref_orig_title") or ref.get("ref_title")
+        if title:
+            entry_lines.append(f"  title = {{{_escape_bibtex_value(title)}}},")
+        if ref.get("ref_journal"):
+            entry_lines.append(f"  journal = {{{_escape_bibtex_value(ref['ref_journal'])}}},")
+        if ref.get("ref_year"):
+            entry_lines.append(f"  year = {{{_escape_bibtex_value(ref['ref_year'])}}},")
+        if ref.get("ref_doi"):
+            entry_lines.append(f"  doi = {{{_escape_bibtex_value(ref['ref_doi'])}}},")
+
+        original_text = ref.get("ref", {}).get("text")
+        if original_text:
+            entry_lines.append(f"  note = {{{_escape_bibtex_value(original_text)}}},")
+
+        entry_lines.append("}")
+        entries.append("\n".join(entry_lines))
+
+    return "\n\n".join(entries).encode("utf-8")

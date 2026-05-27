@@ -1,11 +1,12 @@
 import streamlit as st
 import re
+import hashlib
 from io import BytesIO
 import pandas as pd
 from src.orcid_data import fetch_orcid_data, format_timestamp
 from src.references_matching import extract_and_process_references, prepare_orcid_works, match_references_to_orcid
 from src.overton_data import get_overton_set_url
-from src.format_citations import get_citations
+from src.format_citations import get_citations, selected_refs_to_bibtex
 import importlib.util
 import gettext
 from openpyxl.styles import PatternFill
@@ -866,27 +867,39 @@ with tab_compare:
         refs_file = st.file_uploader(_("Téléchargez un fichier texte contenant des références bibliographiques à extraire :"), type=["txt"])
         
         # Initialize variables
+        screened_refs = []
+        invalid_refs = []
         matched_refs = []
         unmatched_refs = []
+        selected_refs_count = 0
         
         if refs_file:
-            source_refs = refs_file.read().decode("utf-8")
-            
-            # Create progress bar for reference extraction
-            extraction_progress = st.progress(0, text=_("Extraction des références en cours..."))
-            
-            def update_progress(current, total):
-                progress_value = current / total if total > 0 else 0
-                extraction_progress.progress(progress_value, text=_("Traitement des références... ({current}/{total})").format(current=current, total=total))
-            
-            # Extract and process references
-            screened_refs, invalid_refs = extract_and_process_references(source_refs, progress_callback=update_progress)
-            
-            # Clear progress bar when done
-            extraction_progress.empty()
+            source_refs = refs_file.getvalue().decode("utf-8")
+            refs_signature = hashlib.sha256(source_refs.encode("utf-8")).hexdigest()
+            extraction_signature = st.session_state.get("compare_extraction_signature")
 
-            
-            st.toast(_("{valid} références valides extraites, {invalid} références invalides ignorées.").format(valid=len(screened_refs), invalid=len(invalid_refs)), icon=":material/check_circle:")
+            if extraction_signature != refs_signature:
+                # Run extraction only when uploaded content changes.
+                extraction_progress = st.progress(0, text=_("Extraction des références en cours..."))
+
+                def update_progress(current, total):
+                    progress_value = current / total if total > 0 else 0
+                    extraction_progress.progress(progress_value, text=_("Traitement des références... ({current}/{total})").format(current=current, total=total))
+
+                screened_refs, invalid_refs = extract_and_process_references(source_refs, progress_callback=update_progress)
+                extraction_progress.empty()
+
+                st.session_state.compare_extraction_signature = refs_signature
+                st.session_state.compare_screened_refs = screened_refs
+                st.session_state.compare_invalid_refs = invalid_refs
+                # Invalidate match cache when extraction input changes.
+                st.session_state.pop("compare_match_signature", None)
+                st.session_state.pop("compare_all_scored_refs", None)
+
+                st.toast(_("{valid} références valides extraites, {invalid} références invalides ignorées.").format(valid=len(screened_refs), invalid=len(invalid_refs)), icon=":material/check_circle:")
+            else:
+                screened_refs = st.session_state.get("compare_screened_refs", [])
+                invalid_refs = st.session_state.get("compare_invalid_refs", [])
 
     with col_controls:
         
@@ -896,25 +909,78 @@ with tab_compare:
             
             # Configure matching thresholds
             confidence_interval = st.slider(_("Seuil de confiance (%)"), 50, 100, (60, 90), 1)
+
+            previous_confidence_interval = st.session_state.get("compare_confidence_interval")
+            if previous_confidence_interval is not None and previous_confidence_interval != confidence_interval:
+                # Reset per-reference checkbox states when confidence buckets change.
+                for state_key in list(st.session_state.keys()):
+                    if state_key.startswith("select_"):
+                        st.session_state.pop(state_key, None)
+            st.session_state.compare_confidence_interval = confidence_interval
             
             # Prepare ORCID works and match references
             orcid_works = prepare_orcid_works(df)
-            matched_refs, unmatched_refs = match_references_to_orcid(screened_refs, orcid_works, confidence_interval[1])
+            works_signature_payload = "|".join(
+                f"{work['title']}::{work['year']}::{work['journal']}::{work['doi']}"
+                for work in orcid_works
+            )
+            works_signature = hashlib.sha256(works_signature_payload.encode("utf-8")).hexdigest()
+            refs_signature = st.session_state.get("compare_extraction_signature", "")
+            match_signature = f"{refs_signature}:{works_signature}"
+
+            if st.session_state.get("compare_match_signature") != match_signature:
+                # Precompute scores once, then confidence slider only updates display buckets.
+                all_scored_refs, unmatched_scored_refs = match_references_to_orcid(screened_refs, orcid_works, 0)
+                st.session_state.compare_match_signature = match_signature
+                st.session_state.compare_all_scored_refs = all_scored_refs
+            else:
+                all_scored_refs = st.session_state.get("compare_all_scored_refs", [])
+
+            matched_refs = [ref for ref in all_scored_refs if ref["confidence"] >= confidence_interval[1]]
+            unmatched_refs = [ref for ref in all_scored_refs if ref["confidence"] < confidence_interval[1]]
+
+            unmatched_refs_sorted = sorted(unmatched_refs, key=lambda x: x['confidence'], reverse=True)
+            visible_checkbox_keys = []
+            for ref in unmatched_refs_sorted:
+                checkbox_key = f"select_{ref['ref_number']}"
+                if confidence_interval[0] <= ref['confidence'] <= confidence_interval[1]:
+                    if checkbox_key not in st.session_state:
+                        st.session_state[checkbox_key] = False
+                    visible_checkbox_keys.append(checkbox_key)
+                elif confidence_interval[0] > ref['confidence']:
+                    if checkbox_key not in st.session_state:
+                        st.session_state[checkbox_key] = True
+                    visible_checkbox_keys.append(checkbox_key)
+
+            selected_refs_count = sum(1 for key in visible_checkbox_keys if st.session_state.get(key, False))
+            st.session_state.compare_selected_refs = [
+                ref for ref in unmatched_refs_sorted
+                if st.session_state.get(f"select_{ref['ref_number']}", False)
+            ]
             
             # Display statistics
-            col_a, col_b, col_c = st.columns(3)
+            col_a, col_b, col_c, col_d = st.columns(4)
             with col_a:
                 st.metric(_("Références extraites"), len(screened_refs))
             with col_b:
                 st.metric(_("Trouvées dans ORCID"), len(matched_refs))
             with col_c:
                 st.metric(_("Manquantes dans ORCID"), len(unmatched_refs))
+            with col_d:
+                st.metric(_("Sélectionnées pour export"), selected_refs_count)
                 
 
     if matched_refs:
         st.subheader("✅ " + _("{count} références trouvées dans ORCID").format(count=len(matched_refs)))
         sorting_option = st.segmented_control(_("Trier par :"), [_("Score"), _("Alpha"), _("Ordre")], key="sorting_option")
-        for ref in matched_refs:
+        if sorting_option == _("Score"):
+            display_matched_refs = sorted(matched_refs, key=lambda x: x.get('confidence', 0), reverse=True)
+        elif sorting_option == _("Alpha"):
+            display_matched_refs = sorted(matched_refs, key=lambda x: (x.get('orcid_title') or '').lower())
+        else:
+            display_matched_refs = sorted(matched_refs, key=lambda x: x.get('ref_number', 0))
+
+        for ref in display_matched_refs:
             col_source, col_target = st.columns(2)
             with col_source:
                 ref_number = ref['ref_number']
@@ -956,23 +1022,34 @@ with tab_compare:
             if confidence_interval[0] <= ref['confidence'] <= confidence_interval[1]:
                 col_source, col_target = st.columns(2)
                 with col_source:
+                    col_check, col_expand = st.columns([1, 30])
                     ref_number = ref['ref_number']
                     ref_ner = ref['ref_ner']
                     ref_title_display = ref_ner["TITLE"][0] if "TITLE" in ref_ner and ref_ner["TITLE"] else ref["text"][:50] + "..."
-                    with st.expander(f"[{ref_number}] {ref_title_display}"):
-                        st.caption(_("Texte original:"))
-                        st.write(ref.get('ref', {}).get('text', ''))
-                        col_inner, col_outer = st.columns(2)
-                        with col_inner:
-                            if ref.get('ref_journal'):
-                                st.caption(_("Journal") + " : " + (ref['ref_journal'] or 'N/A'))
-                            if ref.get('ref_year'):
-                                st.caption(_("Année") + " : " + (ref['ref_year'] or 'N/A'))
-                            if ref.get('ref_doi'):
-                                st.caption(_("DOI") + " : " + (ref['ref_doi'] or 'N/A'))
-                        with col_outer:
-                            st.caption(_("Entités détectées :"))
-                            st.json(ref_ner, expanded=False)
+                    checkbox_key = f"select_{ref['ref_number']}"
+                    if checkbox_key not in st.session_state:
+                        st.session_state[checkbox_key] = False
+                    with col_check:
+                        selected = st.checkbox(
+                            " ",
+                            key=checkbox_key,
+                            label_visibility="collapsed"
+                            )
+                    with col_expand:
+                        with st.expander(f"[{ref_number}] {ref_title_display}"):
+                            st.caption(_("Texte original:"))
+                            st.write(ref.get('ref', {}).get('text', ''))
+                            col_inner, col_outer = st.columns(2)
+                            with col_inner:
+                                if ref.get('ref_journal'):
+                                    st.caption(_("Journal") + " : " + (ref['ref_journal'] or 'N/A'))
+                                if ref.get('ref_year'):
+                                    st.caption(_("Année") + " : " + (ref['ref_year'] or 'N/A'))
+                                if ref.get('ref_doi'):
+                                    st.caption(_("DOI") + " : " + (ref['ref_doi'] or 'N/A'))
+                            with col_outer:
+                                st.caption(_("Entités détectées :"))
+                                st.json(ref_ner, expanded=False)
 
                 with col_target:
                     confidence_color = "🟢" if ref['confidence'] >= 90 else "🟡" if ref['confidence'] >= 80 else "🟠"
@@ -991,19 +1068,44 @@ with tab_compare:
             if confidence_interval[0] > ref['confidence'] :
                 col_source, col_target = st.columns(2)
                 with col_source:
+                    col_check, col_expand = st.columns([1, 30])
                     ref_number = ref['ref_number']
                     ref_ner = ref['ref_ner']
                     ref_title_display = ref_ner["TITLE"][0] if "TITLE" in ref_ner and ref_ner["TITLE"] else ref["text"][:50] + "..."
-                    with st.expander(f"[{ref_number}] {ref_title_display}"):
-                        st.write(ref.get('ref', {}).get('text', ''))
-                        col_inner, col_outer = st.columns(2)
-                        with col_inner:
-                            if ref.get('ref_journal'):
-                                st.caption(_("Journal") + " : " + (ref['ref_journal'] or 'N/A'))
-                            if ref.get('ref_year'):
-                                st.caption(_("Année") + " : " + (ref['ref_year'] or 'N/A'))
-                            if ref.get('ref_doi'):
-                                st.caption(_("DOI") + " : " + (ref['ref_doi'] or 'N/A'))
-                        with col_outer:
-                            st.caption(_("Entités détectées :"))
-                            st.json(ref_ner, expanded=False)
+                    checkbox_key = f"select_{ref['ref_number']}"
+                    if checkbox_key not in st.session_state:
+                        st.session_state[checkbox_key] = True
+                    with col_check:
+                        selected = st.checkbox(
+                            " ",
+                            key=checkbox_key,
+                            label_visibility="collapsed"
+                            )
+                    with col_expand:
+                        with st.expander(f"[{ref_number}] {ref_title_display}"):
+                            st.write(ref.get('ref', {}).get('text', ''))
+                            col_inner, col_outer = st.columns(2)
+                            with col_inner:
+                                if ref.get('ref_journal'):
+                                    st.caption(_("Journal") + " : " + (ref['ref_journal'] or 'N/A'))
+                                if ref.get('ref_year'):
+                                    st.caption(_("Année") + " : " + (ref['ref_year'] or 'N/A'))
+                                if ref.get('ref_doi'):
+                                    st.caption(_("DOI") + " : " + (ref['ref_doi'] or 'N/A'))
+                            with col_outer:
+                                st.caption(_("Entités détectées :"))
+                                st.json(ref_ner, expanded=False)
+        
+        if selected_refs_count > 0:
+            selected_refs_for_export = st.session_state.get("compare_selected_refs", [])
+            bibtex_data = selected_refs_to_bibtex(selected_refs_for_export)
+            st.download_button(
+                label=_("Télécharger les références sélectionnées (BibTeX)"),
+                data=bibtex_data,
+                file_name="selected-references.bib",
+                mime="application/x-bibtex",
+                key="download_selected_bibtex",
+                icon=":material/download:"
+            )
+        
+
