@@ -860,6 +860,9 @@ with tab_compare:
         st.warning(_("Cette fonctionalité nécessite la présence d'une bibliothèque pour l'extraction des références, telle que 'transformers' ou 'references_tractor'. Veuillez installer au moins l'une de ces bibliothèques."))
         st.stop()
 
+    with st.expander(_("Instructions d'utilisation"), icon=":material/info:"):
+        st.markdown(_("compare_instructions"))
+
     col_file, col_controls = st.columns(2)
 
     with col_file:
@@ -900,6 +903,8 @@ with tab_compare:
             else:
                 screened_refs = st.session_state.get("compare_screened_refs", [])
                 invalid_refs = st.session_state.get("compare_invalid_refs", [])
+
+    st.info(_("Cette fonctionnalité est expérimentale, veuillez vérifier attentivement le résultat de la comparaison avant de l'utiliser pour compléter votre profil ORCID."))
 
     with col_controls:
         
@@ -1097,15 +1102,80 @@ with tab_compare:
                                 st.json(ref_ner, expanded=False)
         
         if selected_refs_count > 0:
-            selected_refs_for_export = st.session_state.get("compare_selected_refs", [])
-            bibtex_data = selected_refs_to_bibtex(selected_refs_for_export)
-            st.download_button(
-                label=_("Télécharger les références sélectionnées (BibTeX)"),
-                data=bibtex_data,
-                file_name="selected-references.bib",
-                mime="application/x-bibtex",
-                key="download_selected_bibtex",
-                icon=":material/download:"
-            )
-        
 
+            def prepare_references_for_export(df):
+                df_copy = df.copy()
+                df_copy["text"] = [ref.get('ref', {}).get('text', '') for ref in df_copy.to_dict(orient='records')]
+                df_copy = df_copy.drop(columns=['ref','ref_ner','ref_title','title_score', 'year_score', 'journal_score', 'doi_score', 'orcid_title', 'orcid_journal', 'orcid_doi', 'orcid_year', 'confidence'], inplace=False)
+                df_copy.rename(columns={
+                    'ref_number': _("Numéro d'ordre"),
+                    'text': _("Texte original"),
+                    'ref_orig_title': _("Titre détecté"),
+                    'ref_journal': _("Journal détecté"),
+                    'ref_year': _("Année détectée"),
+                    'ref_doi': _("DOI détecté")
+                }, inplace=True)
+                return df_copy
+
+            with st.expander(":material/export_notes: " + _("Exporter les %s références sélectionnées") % selected_refs_count):
+                bibtex_col, csv_col, xls_col = st.columns(3)
+
+                with bibtex_col:
+                    def prep_bibtex_export():
+                        selected_refs_for_export = st.session_state.get("compare_selected_refs", [])
+                        return selected_refs_to_bibtex(selected_refs_for_export)
+                    st.download_button(
+                        label=_("Télécharger les références sélectionnées (BibTeX)"),
+                        data=prep_bibtex_export(),
+                        file_name=_("selected-references") + ".bib",
+                        mime="application/x-bibtex",
+                        key="download_selected_bibtex",
+                        icon=":material/download:"
+                    )
+                    st.badge(_("La qualité de l'export au format BibTeX est limitée."), icon=":material/warning:", color="orange")
+                
+                with csv_col:
+                    def prep_csv_export():
+                        export_df = prepare_references_for_export(pd.DataFrame(st.session_state.get("compare_selected_refs", [])))
+                        return export_df.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        label=_("Télécharger les références sélectionnées (CSV)"),
+                        data=prep_csv_export(),
+                        file_name=_("selected-references") + ".csv",
+                        mime="text/csv",
+                        key="download_selected_csv",
+                        icon=":material/download:"
+                    )
+
+                with xls_col:
+                    def prep_excel_export():
+                        df = prepare_references_for_export(pd.DataFrame(st.session_state.get("compare_selected_refs", [])))
+                        excel_buffer = BytesIO()
+                        with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+                            df.to_excel(writer, index=False, sheet_name=_("Références à ajouter"))
+                            ws = writer.sheets[_("Références à ajouter")]
+
+                            # Adjust column widths
+                            for column_cells in ws.columns:
+                                max_length = 0
+                                column_letter = get_column_letter(column_cells[0].column)
+                                for cell in column_cells:
+                                    try:
+                                        cell_length = len(str(cell.value))
+                                        if cell_length > max_length:
+                                            max_length = cell_length
+                                    except Exception:
+                                        pass
+                                adjusted_width = (max_length + 2)
+                                ws.column_dimensions[column_letter].width = adjusted_width
+
+                        excel_buffer.seek(0)
+                        return excel_buffer.getvalue()
+                    st.download_button(
+                        label=_("Télécharger les références sélectionnées (Excel)"),
+                        data=prep_excel_export(),
+                        file_name=_("selected-references") + ".xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        key="download_selected_excel",
+                        icon=":material/download:"
+                    )
