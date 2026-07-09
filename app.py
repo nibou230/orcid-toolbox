@@ -167,8 +167,6 @@ if st.query_params and "tab" in st.query_params and st.query_params["tab"] in ["
 else:
     default_tab = _("Résumé")
 
-tab_summary, tab_works, tab_compare, tab_suggest = st.tabs([_("Résumé"), _("Travaux"), _("Comparateur"), _("Suggestions")], default=default_tab)
-    
 # Check for ORCID from query params first and validate immediately
 if "orcid_list" not in st.session_state:
     if st.query_params and "orcid" in st.query_params and st.query_params["orcid"]:
@@ -251,6 +249,8 @@ if "orcid_list" not in st.session_state:
             st.rerun()
         
         st.stop()
+
+tab_summary, tab_works, tab_compare = st.tabs([_("Résumé"), _("Travaux"), _("Comparateur")], default=default_tab)
 
 # Retrieve from session state
 orcid_list = st.session_state.orcid_list
@@ -837,9 +837,6 @@ with tab_summary:
         st.bar_chart(mapped_work_types.value_counts(), horizontal=True, sort=False)
     else:
         st.warning(_("Aucune donnée de publication disponible pour générer le graphique."))
-
-with tab_suggest:
-    st.warning(_("Cette section n'est pas encore implémentée."))
 
 # Display reset button if there are ORCID profiles loaded
 with reset_container:
