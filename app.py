@@ -17,6 +17,41 @@ from dotenv import load_dotenv
 # TODO: look into using https://docs.python.org/3/library/concurrent.futures.html for parallel
 # data fetching and processing.
 
+# ULaval branding
+def inject_local_css(css_relative_path):
+    css_path = os.path.join(os.path.dirname(__file__), css_relative_path)
+    with open(css_path, encoding="utf-8") as css_file:
+        st.markdown(f"<style>{css_file.read()}</style>", unsafe_allow_html=True)
+
+inject_local_css(os.path.join("css", "bibl-ulaval.css"))
+
+# Hide default header
+st.markdown("""
+<style>
+    header[data-testid="stHeader"] {
+        height: 0px;
+        visibility: hidden;
+    }
+    .block-container {
+        padding-top: 90px;  /* room for your custom header */
+        padding-bottom: 70px; /* room for your custom footer */
+    }
+</style>
+""", unsafe_allow_html=True)
+
+def load_html_fragment(path):
+    with open(path, encoding="utf-8") as f:
+        content = f.read()
+    # Strip full-document wrapper tags if present (doctype/html/head/body)
+    content = re.sub(r'<!DOCTYPE.*?>', '', content, flags=re.IGNORECASE | re.DOTALL)
+    content = re.sub(r'</?(html|head|body)[^>]*>', '', content, flags=re.IGNORECASE)
+    # Collapse leading whitespace on every line so markdown doesn't treat it as a code block
+    content = "\n".join(line.strip() for line in content.splitlines())
+    return content
+
+header_html = load_html_fragment("html/bibl-ulaval-header.html")
+st.markdown(header_html, unsafe_allow_html=True)
+
 # Settings
 overton_enabled = True
 
@@ -51,7 +86,7 @@ def reset_session_state(except_keys=None):
             st.session_state.pop(key)
     st.query_params.clear()
 
-st.set_page_config(page_title=_("app-title"), page_icon=":toolbox:", layout="wide", initial_sidebar_state=250)
+st.set_page_config(page_title=_("app-title"), page_icon="img/ulaval-favicon.png", layout="wide", initial_sidebar_state=250)
 
 # Human readable labels for work types
 type_labels = {
@@ -138,7 +173,7 @@ with st.sidebar:
     st.radio(
         "lang",
         options=["fr", "en"],
-        format_func=lambda option: "🇫🇷" if option == "fr" else "🇬🇧",
+        format_func=lambda option: "FR" if option == "fr" else "EN",
         key="locale_picker",
         horizontal=True,
         label_visibility="collapsed",
@@ -826,7 +861,7 @@ with tab_summary:
     st.subheader(_("Distribution des travaux par année de publication"))
 
     if works_count > 0 and 'publication-year' in works_df.columns:
-        st.bar_chart(works_df['publication-year'].value_counts().sort_index())
+        st.bar_chart(works_df['publication-year'].value_counts().sort_index(), color="#51A27E")
     else:
         st.warning(_("Aucune donnée de publication disponible pour générer le graphique."))
 
@@ -834,7 +869,7 @@ with tab_summary:
 
     if works_count > 0 and 'type' in works_df.columns:
         mapped_work_types = works_df['type'].map(format_work_type_for_display)
-        st.bar_chart(mapped_work_types.value_counts(), horizontal=True, sort=False)
+        st.bar_chart(mapped_work_types.value_counts(), horizontal=True, sort=False, color="#51A27E")
     else:
         st.warning(_("Aucune donnée de publication disponible pour générer le graphique."))
 

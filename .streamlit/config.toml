@@ -1,0 +1,18 @@
+[theme]
+primaryColor = "#E30513"
+
+secondaryBackgroundColor = "#EDEDED"
+
+greenColor = "#3D795E"
+greenBackgroundColor = "#EDF6F2"
+
+orangeColor = "#7D5520"
+orangeBackgroundColor = "#FFF6EB"
+
+redColor = "#AA030E"
+redBackgroundColor = "#FCE5E7"
+
+blueColor = "#004D80"
+blueBackgroundColor = "#E5F5FF"
+
+linkColor = "#0172BF"
