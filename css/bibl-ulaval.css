@@ -1,3 +1,110 @@
+/* Base header background + rouge et or top stripe */
+.stAppHeader {
+    background-color: #ffffff;
+    box-shadow: 0 1px 7px 0 rgba(0, 0, 0, 0.15);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 999999;
+}
+
+.stAppHeader::before {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background-image: linear-gradient(
+        90deg,
+        #E30513, #E30513 80%,
+        #FFC103 80%, #FFC103
+    );
+}
+
+/* Push toolbar content down below the stripe only (single row, no stacking) */
+[data-testid="stToolbar"] {
+    padding-top: 8px;
+}
+
+/* ============================================================
+   Custom header for logo and links (.BUL-header)
+   Sits inline, to the left of the native nav — same row.
+   ============================================================ */
+
+.BUL-header {
+    position: fixed;
+    top: 8px; /* below the stripe */
+    left: 0;
+    height: 52px;  /* Native nav is 60px tall, so this + stripe = 60px */
+    z-index: 1000000;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 16px;
+    pointer-events: none;
+}
+
+.BUL-header a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #000000;
+    padding: 2px;
+    margin: -2px;
+    pointer-events: auto;
+}
+
+.BUL-header a:hover,
+.BUL-header a:focus {
+    text-decoration: underline;
+}
+
+.BUL-header a:focus {
+    outline-color: #000000;
+    outline-offset: 2px;
+    outline-style: solid;
+    outline-width: 1px;
+}
+
+.BUL-header a svg {
+    margin-right: 0.625em;
+}
+
+.BUL-header a span {
+    font-size: 16px;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+
+[data-testid="stToolbar"] {
+    padding-left: 280px; /* match .BUL-header width */
+}
+
+/* Style the nav links themselves */
+[data-testid="stTopNavLink"] {
+    color: #000000;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+[data-testid="stTopNavLink"]:hover,
+[data-testid="stTopNavLink"]:focus {
+    text-decoration: underline;
+}
+
+[data-testid="stTopNavLink"][aria-current="page"] {
+    border-bottom: 4px solid #000000;
+}
+
+/* Push app content up to make up for the fixed header */
+[data-testid="stMainBlockContainer"] {
+    padding-top: 60px; /* match .BUL-header height + stripe */
+}
 
 /* Streamlit custom classes */
 .st-cy {

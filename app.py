@@ -18,39 +18,8 @@ from dotenv import load_dotenv
 # data fetching and processing.
 
 # ULaval branding
-def inject_local_css(css_relative_path):
-    css_path = os.path.join(os.path.dirname(__file__), css_relative_path)
-    with open(css_path, encoding="utf-8") as css_file:
-        st.markdown(f"<style>{css_file.read()}</style>", unsafe_allow_html=True)
-
-inject_local_css(os.path.join("css", "bibl-ulaval.css"))
-
-# Hide default header
-st.markdown("""
-<style>
-    header[data-testid="stHeader"] {
-        height: 0px;
-        visibility: hidden;
-    }
-    .block-container {
-        padding-top: 90px;  /* room for your custom header */
-        padding-bottom: 70px; /* room for your custom footer */
-    }
-</style>
-""", unsafe_allow_html=True)
-
-def load_html_fragment(path):
-    with open(path, encoding="utf-8") as f:
-        content = f.read()
-    # Strip full-document wrapper tags if present (doctype/html/head/body)
-    content = re.sub(r'<!DOCTYPE.*?>', '', content, flags=re.IGNORECASE | re.DOTALL)
-    content = re.sub(r'</?(html|head|body)[^>]*>', '', content, flags=re.IGNORECASE)
-    # Collapse leading whitespace on every line so markdown doesn't treat it as a code block
-    content = "\n".join(line.strip() for line in content.splitlines())
-    return content
-
-header_html = load_html_fragment("html/bibl-ulaval-header.html")
-st.markdown(header_html, unsafe_allow_html=True)
+with open(os.path.join("css", "bibl-ulaval.css"), encoding="utf-8") as css_file:
+    st.markdown(f"<style>{css_file.read()}</style>", unsafe_allow_html=True)
 
 # Settings
 overton_enabled = True
@@ -155,39 +124,6 @@ def format_work_type_for_display(raw_type):
         return type_labels[raw_value]
     else:
         return raw_value
-
-@st.dialog(_("À propos"))
-def about_dialog():
-    st.markdown(_("about_text"))
-    with st.container(horizontal_alignment = "right"):
-        st.image("img/BIBL-logo.png", width=200, link="https://www.bibl.ulaval.ca/services/soutien-a-ledition-savante-et-a-la-recherche/identifiants-uniques-perennes-orcid-doi-isbn-ror")
-
-with st.sidebar:
-    
-    st.header(":toolbox: " + _("app-title"))
-
-    # Compact language chooser with clickable emojis.
-    if "locale_picker" not in st.session_state:
-        st.session_state.locale_picker = st.session_state.locale
-
-    st.radio(
-        "lang",
-        options=["fr", "en"],
-        format_func=lambda option: "FR" if option == "fr" else "EN",
-        key="locale_picker",
-        horizontal=True,
-        label_visibility="collapsed",
-    )
-
-    reset_container = st.container()
-
-    st.image("img/oiseau-orcidee.png")
-
-    if overton_enabled and not overton_key:
-        with st.expander(_("Clés API"), icon=":material/key:"):
-            overton_key = st.text_input(_("Clé API Overton"), help=_("Une clé est nécessaire pour activer le lien direct vers Overton. Vous trouverez la vôtre dans les paramètres de votre compte Overton."))
-
-    st.button(_("À propos"), icon=":material/help:", on_click=about_dialog)
 
 if st.query_params and "tab" in st.query_params and st.query_params["tab"] in ["works", "activites", "resume", "suggestions"]:
     match st.query_params["tab"]:
