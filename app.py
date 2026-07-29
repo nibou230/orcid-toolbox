@@ -124,8 +124,6 @@ def format_work_type_for_display(raw_type):
 @st.dialog(_("À propos"))
 def about_dialog():
     st.markdown(_("about_text"))
-    with st.container(horizontal_alignment = "right"):
-        st.image("img/BIBL-logo.png", width=200, link="https://www.bibl.ulaval.ca/services/soutien-a-ledition-savante-et-a-la-recherche/identifiants-uniques-perennes-orcid-doi-isbn-ror")
 
 with st.sidebar:
     
