@@ -1,5 +1,6 @@
 import streamlit as st
 import gettext
+from src.locale import init_locale, render_branding
 
 st.markdown(f"""
 <div class="BUL-header">
@@ -16,24 +17,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Set locale from Streamlit context if available, otherwise default to fr
-default_locale = "fr"
-if hasattr(st.context, "locale"):
-    browser_locale = st.context.locale
-    if isinstance(browser_locale, str) and browser_locale.startswith("fr"):
-        default_locale = "fr"
-    elif isinstance(browser_locale, str) and browser_locale.startswith("en"):
-        default_locale = "en"
-
-if "locale" not in st.session_state:
-    st.session_state.locale = default_locale
-
-# Keep locale in sync with sidebar selector without forcing manual reruns.
-if "locale_picker" in st.session_state and st.session_state.locale != st.session_state.locale_picker:
-    st.session_state.locale = st.session_state.locale_picker
-
-# Set up gettext translations
-_ = gettext.translation('messages', localedir='loc', languages=[st.session_state.locale], fallback=True).gettext
+_ = init_locale()
 
 pg = st.navigation([st.Page("pages/main.py", title=_("app-title")), st.Page("pages/about.py", title=_("À propos"))], position="top")
 pg.run()
