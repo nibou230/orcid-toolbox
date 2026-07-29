@@ -85,25 +85,57 @@
     padding-left: 280px; /* match .BUL-header width */
 }
 
-/* Style the nav links themselves */
+/* Style navigation links */
 [data-testid="stTopNavLink"] {
     color: #000000;
     text-decoration: none;
     font-weight: 700;
-}
-
-[data-testid="stTopNavLink"]:hover,
-[data-testid="stTopNavLink"]:focus {
-    text-decoration: underline;
+    background-color: transparent;
+    border-radius: 0;
+    border-bottom: 3px solid transparent;
+    border-top: 3px solid transparent;
 }
 
 [data-testid="stTopNavLink"][aria-current="page"] {
-    border-bottom: 4px solid #000000;
+    border-bottom: 3px solid #000000;
 }
 
 /* Push app content up to make up for the fixed header */
 [data-testid="stMainBlockContainer"] {
     padding-top: 60px; /* match .BUL-header height + stripe */
+}
+
+
+/* Style language switcher */
+.st-key-locale_picker {
+    position: fixed;
+    top: 8px;
+    right: 200px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    z-index: 1000000;
+}
+
+
+/* Style footer */
+[data-testid="stBottom"]{
+    height: 50px;
+}
+
+[data-testid="stBottom"] > div{
+    background-color: black;
+}
+
+[data-testid="stBottom"] div{
+    color: white;
+    opacity: 1;
+    font-size: 12px;
+}
+
+[data-testid="stBottom"] a {
+    color: white;
+    text-decoration: none;
 }
 
 /* Streamlit custom classes */
