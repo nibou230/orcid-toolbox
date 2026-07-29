@@ -2,25 +2,26 @@ import gettext
 import os
 import streamlit as st
 
+DEFAULT_LOCALE = "fr" 
+
 def init_locale() -> callable:
-    # 1. Detect browser locale on first load
-    default_locale = "fr"
     if hasattr(st.context, "locale"):
         browser_locale = st.context.locale
         if isinstance(browser_locale, str) and browser_locale.startswith("en"):
-            default_locale = "en"
+            detected = "en"
+        else:
+            detected = DEFAULT_LOCALE
+    else:
+        detected = DEFAULT_LOCALE
 
-    # 2. Initialise session_state on first run
     if "locale" not in st.session_state:
-        st.session_state.locale = default_locale
+        st.session_state.locale = detected
 
-    # 3. Sync from picker widget (handles None gracefully)
     picked = st.session_state.get("locale_picker")
     if picked is not None:
         st.session_state.locale = picked
 
-    # 4. Final defensive fallback — gettext never sees None
-    active_locale = st.session_state.get("locale") or default_locale
+    active_locale = st.session_state.get("locale") or DEFAULT_LOCALE
     st.session_state.locale = active_locale
 
     return gettext.translation(
@@ -38,7 +39,7 @@ def render_branding() -> callable:
     # Language picker widget — must be rendered on every page so
     # session_state.locale_picker stays alive across navigation
     if "locale_picker" not in st.session_state:
-        st.session_state.locale_picker = st.session_state.locale
+        st.session_state.locale_picker = st.session_state.get("locale", DEFAULT_LOCALE)
 
     st.segmented_control(
         "lang",

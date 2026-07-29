@@ -9,7 +9,7 @@ from src.overton_data import get_overton_set_url
 from src.format_citations import get_citations, selected_refs_to_bibtex
 import importlib.util
 import gettext
-from src.locale import init_locale, render_branding
+from src.locale import init_locale, render_branding, DEFAULT_LOCALE
 from openpyxl.styles import PatternFill
 from openpyxl.formatting.rule import FormulaRule
 from openpyxl.utils import get_column_letter
@@ -498,7 +498,7 @@ with tab_works:
                     "ieee": _("IEEE"),
                 }
                 csl_style_for_export = st.selectbox(_("Style de citation"), options=csl_styles.keys(), format_func=lambda key: csl_styles[key], help=_("Style de citation utilisé pour formater les références exportées."))
-                def works_make_citations(csl_format="apa", csl_locale=default_locale):
+                def works_make_citations(csl_format="apa", csl_locale=DEFAULT_LOCALE):
                     # Handle special styles
                     if csl_format == "mcgill" and csl_locale == "fr":
                         csl_format = "mcgill-fr"
@@ -517,7 +517,7 @@ with tab_works:
                 if "locale" in st.session_state:
                     csl_locale = st.session_state.locale
                 else:
-                    csl_locale = default_locale
+                    csl_locale = DEFAULT_LOCALE
                 st.download_button(
                     label=_("Télécharger les citations ({style})").format(style=csl_styles[csl_style_for_export]),
                     data=lambda: works_make_citations(csl_format=csl_style_for_export, csl_locale=csl_locale),
