@@ -37,8 +37,6 @@ def reset_session_state(except_keys=None):
             st.session_state.pop(key)
     st.query_params.clear()
 
-reset_container = st.container(key="reset_container")
-
 st.set_page_config(page_title=_("app-title"), page_icon="img/ulaval-favicon.png", layout="wide", initial_sidebar_state=250)
 
 # Human readable labels for work types
@@ -794,9 +792,8 @@ with tab_summary:
         st.warning(_("Aucune donnée de publication disponible pour générer le graphique."))
 
 # Display reset button if there are ORCID profiles loaded
-#with reset_container:
-#    if "orcid_list" in st.session_state:
-#        st.button(_("Réinitialiser"), type="secondary", on_click=reset_session_state, args=(["locale_picker"],))
+if "orcid_list" in st.session_state:
+    st.button(_("Réinitialiser"), type="secondary", key="reset_button", on_click=reset_session_state, args=(["locale_picker"],))
 
 with tab_compare:
 

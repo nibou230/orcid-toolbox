@@ -138,6 +138,17 @@
     text-decoration: none;
 }
 
+/* Style reset button */
+.st-key-reset_button {
+  position: fixed;
+  top: 8px;
+  right: 500px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  z-index: 1000000;
+}
+
 /* Streamlit custom classes */
 .st-cy {
     background-color: #EDEDED;

@@ -5,9 +5,6 @@ _ = init_locale()
 render_footer = render_branding()
 render_footer()
 
-
-reset_container = st.container(key="reset_container")
-
 col_image, col_text = st.columns([1, 4])
 
 with col_image:
