@@ -1,0 +1,134 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Azure Pipelines – ORCID Toolbox
+# Target: Azure App Service named bibl-mrs-pr-app-orcid
+#
+# Strategy: source-only zip + Oryx server-side build.
+#   The build agent zips only the source code (~few MB). Azure's Oryx build
+#   system then runs pip install on the Linux host during deployment, so all
+#   native extensions (torch, tokenizers, sentencepiece …) are compiled for
+#   the correct platform and disk pressure on the agent is eliminated.
+#
+# Prerequisites (configure once in Azure DevOps / Azure Portal):
+#   1. Create a Service Connection to your Azure subscription and set its name
+#      as the value of the `azureServiceConnection` variable below.
+#   2. In the App Service → Configuration → Application settings, add:
+#        WEBSITES_PORT                  = 8000
+#        SCM_DO_BUILD_DURING_DEPLOYMENT = true
+#      Do not set POST_BUILD_COMMAND. NLTK is not used by the deployed
+#      transformer-based implementation, and invoking nltk.downloader would
+#      fail because NLTK is intentionally not an application dependency.
+#
+#      SCM_DO_BUILD_DURING_DEPLOYMENT enables Oryx to run uv pip install on the
+#      Linux host during deployment. The application uses its transformer-based
+#      reference extractor by default; references-tractor is optional because
+#      its pinned llvmlite dependency does not support the Python 3.14 runtime.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# The YAML lives in the GitHub fork. Azure DevOps registers a webhook
+# automatically, so pushes to main trigger this pipeline via the CI trigger below.
+trigger:
+  branches:
+    include:
+      - orcidee-ul
+  paths:
+    include:
+      - app.py
+      - requirements.txt
+      - azure-pipelines.yaml
+      - src/**
+      - loc/**
+
+variables:
+  azureServiceConnection: 'BIBL-MRS-PR'
+  webAppName: 'bibl-mrs-pr-app-orcid'
+  pythonVersion: '3.14'
+  artifactName: 'orcid-toolbox-drop'
+
+stages:
+
+  # ───────────────────────────── BUILD ─────────────────────────────────────
+  - stage: Build
+    displayName: 'Build'
+    jobs:
+      - job: BuildJob
+        displayName: 'Compile translations & package source'
+        pool:
+          vmImage: 'ubuntu-latest'
+
+        steps:
+          - checkout: self
+            fetchDepth: 1
+
+          - task: UsePythonVersion@0
+            displayName: 'Use Python $(pythonVersion)'
+            inputs:
+              versionSpec: '$(pythonVersion)'
+              addToPath: true
+
+          # Convert requirements.txt (UTF-16) to UTF-8 for Oryx/uv.
+          - script: |
+              python - <<'EOF'
+              with open('requirements.txt', 'rb') as f:
+                  content = f.read().decode('utf-16')
+              with open('requirements.txt', 'w', encoding='utf-8') as f:
+                  f.write(content)
+              EOF
+            displayName: 'Convert requirements.txt to UTF-8'
+
+          # Babel is only needed here to compile .po → .mo; it is not
+          # pre-installed into the artifact so it costs nothing on disk.
+          - script: |
+              pip install --quiet --no-cache-dir babel
+              pybabel compile -d loc
+            displayName: 'Compile translation files (.po → .mo)'
+
+          # Zip only the application source – no .python_packages folder.
+          # Oryx will run `uv pip install -r requirements.txt` on the Linux host
+          # during deployment, producing correct Linux native binaries.
+          - task: ArchiveFiles@2
+            displayName: 'Create source-only deployment zip'
+            inputs:
+              rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+              includeRootFolder: false
+              archiveType: 'zip'
+              archiveFile: '$(Build.ArtifactStagingDirectory)/$(artifactName).zip'
+              replaceExistingArchive: true
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish artifact'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: '$(artifactName)'
+              publishLocation: 'Container'
+
+  # ───────────────────────────── DEPLOY ────────────────────────────────────
+  - stage: Deploy
+    displayName: 'Deploy to Azure App Service'
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - deployment: DeployJob
+        displayName: 'Deploy bibl-mrs-pr-app-orcid'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: 'bibl-mrs-pr-orcid'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebApp@1
+                  displayName: 'Deploy zip to Azure Web App'
+                  inputs:
+                    azureSubscription: '$(azureServiceConnection)'
+                    appType: 'webAppLinux'
+                    appName: '$(webAppName)'
+                    package: '$(Pipeline.Workspace)/$(artifactName)/$(artifactName).zip'
+                    runtimeStack: 'PYTHON|$(pythonVersion)'
+                    # SCM_DO_BUILD_DURING_DEPLOYMENT=true (set in App Service
+                    # application settings) makes Oryx run pip install here.
+                    # Streamlit listens on 8000; WEBSITES_PORT must match.
+                    startUpCommand: >-
+                      python -m streamlit run app.py
+                      --server.port 8000
+                      --server.address 0.0.0.0
+                      --server.headless true
