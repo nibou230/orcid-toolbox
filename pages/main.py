@@ -37,7 +37,7 @@ def reset_session_state(except_keys=None):
             st.session_state.pop(key)
     st.query_params.clear()
 
-st.set_page_config(page_title=_("app-title"), page_icon="img/ulaval-favicon.png", layout="wide", initial_sidebar_state=250)
+st.set_page_config(page_title=_("app-title"), page_icon="img/ulaval-favicon.png", layout="wide", initial_sidebar_state="collapsed")
 
 # Human readable labels for work types
 type_labels = {

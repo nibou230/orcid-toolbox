@@ -149,6 +149,32 @@
   z-index: 1000000;
 }
 
+@media (max-width: 620px) {
+    /* Hide header-positioned widgets */
+    .st-key-locale_picker {
+        position: static;
+        display: flex;
+        align-items: center;
+        height: auto;
+        background: none;
+    }
+
+    /* Free up toolbar padding */
+    [data-testid="stToolbar"] {
+        padding-right: 0;
+    }
+}
+
+@media (max-width: 1100px) {
+    .st-key-reset_button {
+        position: static;
+        display: flex;
+        align-items: center;
+        height: auto;
+        background: none;
+    }
+}
+
 /* Streamlit custom classes */
 .st-cy {
     background-color: #EDEDED;
